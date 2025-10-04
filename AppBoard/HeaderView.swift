@@ -35,6 +35,10 @@ struct HeaderView: View {
             .pickerStyle(SegmentedPickerStyle())
             .frame(width: 100)
             
+            // Sync indicator
+            CompactSyncIndicator()
+                .padding(.trailing, 8)
+            
             Button {
                 showSettings = true
             } label: {

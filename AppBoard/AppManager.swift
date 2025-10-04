@@ -8,11 +8,21 @@ class AppManager: ObservableObject {
     @Published var categories: [String] = ["Tutte", "Sistema", "Produttività", "Creatività", "Sviluppo", "Giochi", "Social", "Utilità", "Educazione", "Sicurezza", "Multimedia", "Comunicazione", "Finanza", "Salute", "News"]
     var isLoaded = false
     
+    // CloudKit sync integration - optional per evitare crash all'init
+    private var _cloudKitManager: CloudKitManager?
+    private var cloudKitManager: CloudKitManager {
+        if _cloudKitManager == nil {
+            _cloudKitManager = CloudKitManager.shared
+        }
+        return _cloudKitManager!
+    }
+    
     // Categorie predefinite che non possono essere eliminate o rinominate
     private let defaultCategories: Set<String> = ["Tutte", "Sistema", "Produttività", "Creatività", "Sviluppo", "Giochi", "Social", "Utilità", "Educazione", "Sicurezza", "Multimedia", "Comunicazione", "Finanza", "Salute", "News"]
     
     init() {
         loadCustomCategories()
+        setupCloudKitNotifications()
     }
 
     private var appPaths: [String] {
@@ -242,6 +252,18 @@ class AppManager: ObservableObject {
                 setCustomCategoryIcon(category: name, iconName: iconName)
             }
             saveCustomCategories()
+            
+            // Sincronizza con CloudKit
+            let categoryData = SyncableCategoryData(
+                name: name,
+                icon: icon ?? "📁",
+                isCustom: true
+            )
+            
+            // Sincronizzazione CloudKit in modo sicuro
+            Task {
+                await syncCategoryToCloud(categoryData)
+            }
         }
     }
 
@@ -295,7 +317,9 @@ class AppManager: ObservableObject {
                 self.apps = cachedApps
                 isLoaded = true
             } catch {
-                print("Errore nel caricamento cache app: \(error)")
+                print("Errore nel caricamento cache app (probabile aggiornamento struttura): \(error)")
+                // Cancella la cache corrotta e ricarica le app
+                clearCache()
             }
         }
     }
@@ -313,18 +337,8 @@ class AppManager: ObservableObject {
             return
         }
         
-        apps[index] = AppInfo(
-            id: apps[index].id,
-            name: apps[index].name,
-            developer: apps[index].developer,
-            bundleIdentifier: apps[index].bundleIdentifier,
-            version: apps[index].version,
-            path: apps[index].path,
-            category: newCategory,
-            size: apps[index].size,
-            sizeInBytes: apps[index].sizeInBytes,
-            lastUsed: apps[index].lastUsed
-        )
+        // Usa il nuovo metodo withUpdatedCategory per gestire i metadati di sync
+        apps[index] = apps[index].withUpdatedCategory(newCategory)
         
         // Aggiungi la categoria se non esiste già
         if !categories.contains(newCategory) && newCategory != "Tutte" {
@@ -333,6 +347,19 @@ class AppManager: ObservableObject {
         
         // Salva la cache aggiornata
         saveAppsCache()
+        
+        // Sincronizza con CloudKit se è una categoria personalizzata
+        if isCustomCategory(newCategory) {
+            let assignmentData = SyncableAppData(
+                bundleIdentifier: apps[index].bundleIdentifier,
+                assignedCategory: newCategory
+            )
+            
+            // Sincronizzazione CloudKit in modo sicuro
+            Task {
+                await syncAppAssignmentToCloud(assignmentData)
+            }
+        }
         
         print("Categoria aggiornata per \(apps[index].name): \(newCategory)")
     }
@@ -474,6 +501,151 @@ class AppManager: ObservableObject {
     private func loadCustomCategoryIcons() {
         if let saved = UserDefaults.standard.dictionary(forKey: "customCategoryIcons") as? [String: String] {
             customCategoryIcons = saved
+        }
+    }
+    
+    // MARK: - CloudKit Integration
+    
+    private func setupCloudKitNotifications() {
+        NotificationCenter.default.addObserver(
+            forName: .categoryAddedFromSync,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let categoryData = notification.object as? SyncableCategoryData {
+                self?.handleSyncedCategory(categoryData)
+            }
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: .categoryUpdatedFromSync,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let categoryData = notification.object as? SyncableCategoryData {
+                self?.handleSyncedCategory(categoryData)
+            }
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: .appAssignmentAddedFromSync,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let assignmentData = notification.object as? SyncableAppData {
+                self?.handleSyncedAppAssignment(assignmentData)
+            }
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: .appAssignmentUpdatedFromSync,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let assignmentData = notification.object as? SyncableAppData {
+                self?.handleSyncedAppAssignment(assignmentData)
+            }
+        }
+    }
+    
+    private func handleSyncedCategory(_ categoryData: SyncableCategoryData) {
+        // Aggiungi o aggiorna la categoria locale
+        if !categories.contains(categoryData.name) {
+            categories.append(categoryData.name)
+        }
+        
+        // Imposta l'icona personalizzata se presente
+        if !categoryData.icon.isEmpty {
+            setCustomCategoryIcon(category: categoryData.name, iconName: categoryData.icon)
+        }
+        
+        saveCustomCategories()
+        print("Categoria sincronizzata da iCloud: \(categoryData.name)")
+    }
+    
+    private func handleSyncedAppAssignment(_ assignmentData: SyncableAppData) {
+        // Trova l'app corrispondente e aggiorna la categoria
+        if let index = apps.firstIndex(where: { $0.bundleIdentifier == assignmentData.bundleIdentifier }) {
+            apps[index] = apps[index].withUpdatedCategory(assignmentData.assignedCategory).markAsSynced()
+            
+            // Assicurati che la categoria esista
+            if !categories.contains(assignmentData.assignedCategory) {
+                categories.append(assignmentData.assignedCategory)
+            }
+            
+            saveAppsCache()
+            print("Assegnazione app sincronizzata da iCloud: \(assignmentData.bundleIdentifier) -> \(assignmentData.assignedCategory)")
+        }
+    }
+    
+    // Metodo pubblico per attivare la sincronizzazione manuale
+    func syncWithiCloud() async {
+        guard let _ = _cloudKitManager else {
+            print("CloudKit non inizializzato")
+            return
+        }
+        await cloudKitManager.syncAll()
+    }
+    
+    // Metodo per ottenere lo stato di sincronizzazione
+    var syncStatus: SyncStatus {
+        guard let _ = _cloudKitManager else { return .idle }
+        return cloudKitManager.syncStatus
+    }
+    
+    // Metodo per verificare se la sincronizzazione è abilitata
+    var isSyncEnabled: Bool {
+        guard let _ = _cloudKitManager else { return false }
+        return cloudKitManager.syncEnabled
+    }
+    
+    // Metodo per abilitare/disabilitare la sincronizzazione
+    func setSyncEnabled(_ enabled: Bool) {
+        guard let _ = _cloudKitManager else { return }
+        cloudKitManager.enableSync(enabled)
+    }
+    
+    // MARK: - Safe CloudKit Access Helpers
+    
+    private func syncCategoryToCloud(_ categoryData: SyncableCategoryData) async {
+        guard let _ = _cloudKitManager else {
+            // CloudKit non ancora inizializzato, salta la sincronizzazione
+            print("CloudKit non inizializzato, saltando sincronizzazione categoria")
+            return
+        }
+        
+        do {
+            if cloudKitManager.isOnline {
+                try await cloudKitManager.syncCustomCategories()
+            } else {
+                let operation = CloudKitOperation(type: .saveCategory, categoryData: categoryData)
+                cloudKitManager.addPendingOperation(operation)
+            }
+        } catch {
+            print("Errore sincronizzazione categoria: \(error)")
+            let operation = CloudKitOperation(type: .saveCategory, categoryData: categoryData)
+            cloudKitManager.addPendingOperation(operation)
+        }
+    }
+    
+    private func syncAppAssignmentToCloud(_ assignmentData: SyncableAppData) async {
+        guard let _ = _cloudKitManager else {
+            // CloudKit non ancora inizializzato, salta la sincronizzazione
+            print("CloudKit non inizializzato, saltando sincronizzazione app assignment")
+            return
+        }
+        
+        do {
+            if cloudKitManager.isOnline {
+                try await cloudKitManager.syncAppAssignments()
+            } else {
+                let operation = CloudKitOperation(type: .saveAppAssignment, appData: assignmentData)
+                cloudKitManager.addPendingOperation(operation)
+            }
+        } catch {
+            print("Errore sincronizzazione app assignment: \(error)")
+            let operation = CloudKitOperation(type: .saveAppAssignment, appData: assignmentData)
+            cloudKitManager.addPendingOperation(operation)
         }
     }
 

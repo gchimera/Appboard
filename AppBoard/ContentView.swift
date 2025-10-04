@@ -95,6 +95,7 @@ struct ContentView: View {
                     showSettings: $showSettings,
                     onReload: reloadApps
                 )
+                .environmentObject(appManager)
 
                 ScrollView {
                     if viewMode == .grid {
@@ -164,6 +165,7 @@ struct ContentView: View {
                 iconSizes: iconSizes,
                 iconSizeLabels: iconSizeLabels
             )
+            .environmentObject(appManager)
         }
         .sheet(isPresented: $showCategoryManagement) {
             CategoryManagementView(appManager: appManager)
