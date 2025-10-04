@@ -7,6 +7,13 @@ class AppManager: ObservableObject {
     @Published var apps: [AppInfo] = []
     @Published var categories: [String] = ["Tutte", "Sistema", "Produttività", "Creatività", "Sviluppo", "Giochi", "Social", "Utilità"]
     var isLoaded = false
+    
+    // Categorie predefinite che non possono essere eliminate o rinominate
+    private let defaultCategories: Set<String> = ["Tutte", "Sistema", "Produttività", "Creatività", "Sviluppo", "Giochi", "Social", "Utilità"]
+    
+    init() {
+        loadCustomCategories()
+    }
 
     private var appPaths: [String] {
         var paths = ["/Applications"]
@@ -180,6 +187,7 @@ class AppManager: ObservableObject {
     func addCustomCategory(_ name: String) {
         if !categories.contains(name) {
             categories.append(name)
+            saveCustomCategories()
         }
     }
 
@@ -234,6 +242,149 @@ class AppManager: ObservableObject {
     func clearCache() {
         UserDefaults.standard.removeObject(forKey: "cachedApps")
         isLoaded = false
+    }
+    
+    // MARK: Category Management
+    
+    func updateAppCategory(appId: UUID, newCategory: String) {
+        guard let index = apps.firstIndex(where: { $0.id == appId }) else {
+            print("App non trovata per l'aggiornamento categoria")
+            return
+        }
+        
+        apps[index] = AppInfo(
+            id: apps[index].id,
+            name: apps[index].name,
+            developer: apps[index].developer,
+            bundleIdentifier: apps[index].bundleIdentifier,
+            version: apps[index].version,
+            path: apps[index].path,
+            category: newCategory,
+            size: apps[index].size,
+            sizeInBytes: apps[index].sizeInBytes,
+            lastUsed: apps[index].lastUsed
+        )
+        
+        // Aggiungi la categoria se non esiste già
+        if !categories.contains(newCategory) && newCategory != "Tutte" {
+            addCustomCategory(newCategory)
+        }
+        
+        // Salva la cache aggiornata
+        saveAppsCache()
+        
+        print("Categoria aggiornata per \(apps[index].name): \(newCategory)")
+    }
+    
+    // MARK: Advanced Category Management
+    
+    func isCustomCategory(_ category: String) -> Bool {
+        return !defaultCategories.contains(category)
+    }
+    
+    var customCategories: [String] {
+        return categories.filter { !defaultCategories.contains($0) }
+    }
+    
+    func renameCategory(from oldName: String, to newName: String) -> Bool {
+        // Non permettere di rinominare categorie predefinite
+        guard isCustomCategory(oldName) else {
+            print("Impossibile rinominare categoria predefinita: \(oldName)")
+            return false
+        }
+        
+        // Controlla che il nuovo nome non esista già
+        guard !categories.contains(newName) else {
+            print("La categoria \(newName) esiste già")
+            return false
+        }
+        
+        // Rinomina nella lista delle categorie
+        if let index = categories.firstIndex(of: oldName) {
+            categories[index] = newName
+        }
+        
+        // Aggiorna tutte le app che usano questa categoria
+        for i in apps.indices {
+            if apps[i].category == oldName {
+                apps[i] = AppInfo(
+                    id: apps[i].id,
+                    name: apps[i].name,
+                    developer: apps[i].developer,
+                    bundleIdentifier: apps[i].bundleIdentifier,
+                    version: apps[i].version,
+                    path: apps[i].path,
+                    category: newName,
+                    size: apps[i].size,
+                    sizeInBytes: apps[i].sizeInBytes,
+                    lastUsed: apps[i].lastUsed
+                )
+            }
+        }
+        
+        // Salva le modifiche
+        saveCustomCategories()
+        saveAppsCache()
+        
+        print("Categoria rinominata da \(oldName) a \(newName)")
+        return true
+    }
+    
+    func deleteCategory(_ categoryName: String) -> Bool {
+        // Non permettere di eliminare categorie predefinite
+        guard isCustomCategory(categoryName) else {
+            print("Impossibile eliminare categoria predefinita: \(categoryName)")
+            return false
+        }
+        
+        // Rimuovi dalla lista delle categorie
+        categories.removeAll { $0 == categoryName }
+        
+        // Riassegna tutte le app di questa categoria a "Utilità"
+        let defaultCategory = "Utilità"
+        for i in apps.indices {
+            if apps[i].category == categoryName {
+                apps[i] = AppInfo(
+                    id: apps[i].id,
+                    name: apps[i].name,
+                    developer: apps[i].developer,
+                    bundleIdentifier: apps[i].bundleIdentifier,
+                    version: apps[i].version,
+                    path: apps[i].path,
+                    category: defaultCategory,
+                    size: apps[i].size,
+                    sizeInBytes: apps[i].sizeInBytes,
+                    lastUsed: apps[i].lastUsed
+                )
+            }
+        }
+        
+        // Salva le modifiche
+        saveCustomCategories()
+        saveAppsCache()
+        
+        print("Categoria \(categoryName) eliminata, app riassegnate a \(defaultCategory)")
+        return true
+    }
+    
+    // MARK: Custom Categories Storage
+    
+    private func saveCustomCategories() {
+        let customCats = customCategories
+        UserDefaults.standard.set(customCats, forKey: "customCategories")
+        print("Categorie personalizzate salvate: \(customCats)")
+    }
+    
+    private func loadCustomCategories() {
+        if let saved = UserDefaults.standard.array(forKey: "customCategories") as? [String] {
+            // Aggiungi le categorie personalizzate a quelle predefinite
+            for customCategory in saved {
+                if !categories.contains(customCategory) {
+                    categories.append(customCategory)
+                }
+            }
+            print("Categorie personalizzate caricate: \(saved)")
+        }
     }
 
 }

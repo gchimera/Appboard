@@ -13,17 +13,12 @@ struct SettingsView: View {
                 .padding(.top)
             Divider()
             HStack {
-                Image(systemName: "app.dashed")
-                    .foregroundColor(.accentColor)
-                Text("Dimensione icone")
-                    .font(.headline)
-                Spacer()
                 Picker("Dimensione icone", selection: $iconSize) {
                     ForEach(iconSizes, id: \.self) { size in
                         Text(iconSizeLabels[size] ?? "\(Int(size)) pt").tag(size)
                     }
                 }
-                .frame(width: 150)
+                .frame(width: 250)
             }
             .padding(.horizontal)
             Spacer()

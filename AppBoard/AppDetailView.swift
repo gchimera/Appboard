@@ -4,6 +4,8 @@ import AppKit
 struct AppDetailView: View {
     let app: AppInfo
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var appManager: AppManager
+    @State private var showCategorySelector = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -57,7 +59,7 @@ struct AppDetailView: View {
                         .buttonStyle(.bordered)
                     }
                     Divider()
-                    infoRow(label: "Categoria", value: app.category, icon: "tag.fill")
+                    categoryRow()
                     infoRow(label: "Dimensione", value: app.size, icon: "internaldrive")
                     infoRow(label: "Bundle ID", value: app.bundleIdentifier, icon: "doc.plaintext")
                     infoRow(label: "Percorso", value: app.path, icon: "signpost.right")
@@ -70,6 +72,36 @@ struct AppDetailView: View {
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         .shadow(radius: 20)
+        .sheet(isPresented: $showCategorySelector) {
+            CategorySelectorView(
+                app: app,
+                appManager: appManager
+            ) { newCategory in
+                appManager.updateAppCategory(appId: app.id, newCategory: newCategory)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    func categoryRow() -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: "tag.fill")
+                .foregroundColor(.accentColor)
+                .frame(width: 23)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Categoria").font(.caption).foregroundColor(.secondary)
+                HStack {
+                    Text("\(appManager.iconForCategory(app.category)) \(app.category)")
+                        .font(.body)
+                    Spacer()
+                    Button("Cambia") {
+                        showCategorySelector = true
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+            }
+        }
     }
     
     @ViewBuilder

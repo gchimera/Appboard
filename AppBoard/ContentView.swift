@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var iconSize: CGFloat = 64
     @State private var showSettings = false
     @State private var showCategoryCreation = false
+    @State private var showCategoryManagement = false
     private var notificationCenter = NotificationCenter.default
     @State private var cancellable: AnyCancellable?
 
@@ -78,8 +79,15 @@ struct ContentView: View {
                 }
                 .listStyle(SidebarListStyle())
 
-                Button("Nuova Categoria") {
-                    showCategoryCreation = true
+                VStack(spacing: 8) {
+                    Button("Nuova Categoria") {
+                        showCategoryCreation = true
+                    }
+                    
+                    Button("Gestisci Categorie") {
+                        showCategoryManagement = true
+                    }
+                    .buttonStyle(.bordered)
                 }
                 .padding()
             }
@@ -153,6 +161,7 @@ struct ContentView: View {
         }
         .sheet(item: $selectedApp) { app in
             AppDetailView(app: app)
+                .environmentObject(appManager)
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
@@ -166,6 +175,9 @@ struct ContentView: View {
                 appManager.addCustomCategory(newCategoryName)
                 showCategoryCreation = false
             }
+        }
+        .sheet(isPresented: $showCategoryManagement) {
+            CategoryManagementView(appManager: appManager)
         }
         .onAppear {
             appManager.loadInstalledApps()
