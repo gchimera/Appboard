@@ -16,6 +16,7 @@ struct AppInfo: Identifiable, Codable, Hashable {
     // Metadati di sincronizzazione CloudKit
     var lastCategoryChange: Date
     var syncedToCloud: Bool
+    var isProblematic: Bool // Flag per app con Info.plist mancante
     
     var iconImage: NSImage {
         return NSWorkspace.shared.icon(forFile: path)
@@ -25,7 +26,7 @@ struct AppInfo: Identifiable, Codable, Hashable {
     init(id: UUID, name: String, developer: String, bundleIdentifier: String, 
          version: String, path: String, category: String, size: String, 
          sizeInBytes: Int64, lastUsed: Date, lastCategoryChange: Date = Date(), 
-         syncedToCloud: Bool = false) {
+         syncedToCloud: Bool = false, isProblematic: Bool = false) {
         self.id = id
         self.name = name
         self.developer = developer
@@ -38,6 +39,7 @@ struct AppInfo: Identifiable, Codable, Hashable {
         self.lastUsed = lastUsed
         self.lastCategoryChange = lastCategoryChange
         self.syncedToCloud = syncedToCloud
+        self.isProblematic = isProblematic
     }
     
     // Metodo per aggiornare la categoria con timestamp
@@ -77,6 +79,6 @@ struct AppInfo: Identifiable, Codable, Hashable {
     }
     
     enum CodingKeys: String, CodingKey {
-        case id, name, developer, bundleIdentifier, version, path, category, size, sizeInBytes, lastUsed, lastCategoryChange, syncedToCloud
+        case id, name, developer, bundleIdentifier, version, path, category, size, sizeInBytes, lastUsed, lastCategoryChange, syncedToCloud, isProblematic
     }
 }

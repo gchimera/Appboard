@@ -77,26 +77,40 @@ class AppManager: ObservableObject {
 
     private func createAppInfo(from url: URL) async -> AppInfo? {
         let infoPlistURL = url.appendingPathComponent("Contents/Info.plist")
-        
-        guard FileManager.default.fileExists(atPath: infoPlistURL.path) else {
-            print("Info.plist mancante: \(url.lastPathComponent)")
-            return nil
+        var plist: NSDictionary?
+
+        if FileManager.default.fileExists(atPath: infoPlistURL.path) {
+            plist = NSDictionary(contentsOf: infoPlistURL)
+        }
+
+        // Se il plist non esiste o non può essere letto, crea un'app con dati di fallback
+        if plist == nil {
+            print("Info.plist non trovato o illeggibile per \(url.lastPathComponent). Creazione app con fallback.")
+            let name = url.deletingPathExtension().lastPathComponent
+            let size = await getDirectorySize(url: url)
+            return AppInfo(
+                id: UUID(),
+                name: name,
+                developer: "Sconosciuto",
+                bundleIdentifier: "com.unknown.\(name.filter { !$0.isWhitespace })",
+                version: "N/A",
+                path: url.path,
+                category: "Utilità",
+                size: formatBytes(size),
+                sizeInBytes: size,
+                lastUsed: getLastUsedDate(for: url),
+                isProblematic: true // Flag per indicare che l'app ha problemi
+            )
         }
         
-        guard let plist = NSDictionary(contentsOf: infoPlistURL) else {
-            print("Errore a leggere Info.plist: \(url.lastPathComponent)")
-            return nil
-        }
-        
-        let name = (plist["CFBundleDisplayName"] as? String) ??
-                   (plist["CFBundleName"] as? String) ??
+        let name = (plist?["CFBundleDisplayName"] as? String) ??
+                   (plist?["CFBundleName"] as? String) ??
                    url.deletingPathExtension().lastPathComponent
         
-        let developer = (plist["CFBundleIdentifier"] as? String) ?? "Sconosciuto"
-        
-        let version = (plist["CFBundleShortVersionString"] as? String) ?? "Sconosciuto"
-        let bundleId = (plist["CFBundleIdentifier"] as? String) ?? ""
-        let categoryType = plist["LSApplicationCategoryType"] as? String
+        let developer = (plist?["CFBundleIdentifier"] as? String) ?? "Sconosciuto"
+        let version = (plist?["CFBundleShortVersionString"] as? String) ?? "Sconosciuto"
+        let bundleId = (plist?["CFBundleIdentifier"] as? String) ?? "com.unknown.\(name.filter { !$0.isWhitespace })"
+        let categoryType = plist?["LSApplicationCategoryType"] as? String
         
         let size = await getDirectorySize(url: url)
         let category = determineCategory(from: categoryType, bundleId: bundleId, name: name)
@@ -112,7 +126,8 @@ class AppManager: ObservableObject {
             category: category,
             size: formatBytes(size),
             sizeInBytes: size,
-            lastUsed: lastUsed
+            lastUsed: lastUsed,
+            isProblematic: false
         )
     }
 
