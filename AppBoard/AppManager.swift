@@ -230,4 +230,10 @@ class AppManager: ObservableObject {
             }
         }
     }
+    
+    func clearCache() {
+        UserDefaults.standard.removeObject(forKey: "cachedApps")
+        isLoaded = false
+    }
+
 }

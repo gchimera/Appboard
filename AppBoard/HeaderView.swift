@@ -5,6 +5,7 @@ struct HeaderView: View {
     @Binding var viewMode: ContentView.ViewMode
     @Binding var sortOption: ContentView.SortOption
     @Binding var showSettings: Bool
+    let onReload: () -> Void
     
     var body: some View {
         HStack {
@@ -42,6 +43,18 @@ struct HeaderView: View {
                     .help("Impostazioni")
             }
             .buttonStyle(.plain)
+            
+            // Refresh loading apps
+            Button {
+                           onReload()
+                       } label: {
+                           Image(systemName: "arrow.clockwise")
+                               .imageScale(.large)
+                               .help("Ricarica app e cancella cache")
+                       }
+                       .buttonStyle(.plain)
+                       .padding(.leading, 8)
+            
         }
         .padding()
         .background(Color(NSColor.controlBackgroundColor))

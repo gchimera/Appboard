@@ -89,7 +89,8 @@ struct ContentView: View {
                     searchText: $searchText,
                     viewMode: $viewMode,
                     sortOption: $sortOption,
-                    showSettings: $showSettings
+                    showSettings: $showSettings,
+                    onReload: reloadApps
                 )
 
                 ScrollView {
@@ -179,5 +180,12 @@ struct ContentView: View {
         .onDisappear {
             cancellable?.cancel()
         }
+        
     }
+    
+    func reloadApps() {
+        appManager.clearCache()
+        appManager.loadInstalledApps()
+    }
+
 }
