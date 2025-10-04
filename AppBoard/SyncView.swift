@@ -275,15 +275,15 @@ struct CompactSyncIndicator: View {
     private var statusColor: Color {
         switch appManager.syncStatus {
         case .success:
-            return .green
+            return .blue // Modificato da .green a .blue
         case .error:
             return .red
         case .syncing:
-            return .blue
+            return .orange // Usiamo arancione per indicare in corso
         case .offline:
-            return .orange
-        case .idle:
             return .gray
+        case .idle:
+            return .secondary
         }
     }
 }
@@ -329,11 +329,16 @@ struct SyncSettingsSection: View {
     
     private var statusColor: Color {
         switch appManager.syncStatus {
-        case .success: return .green
-        case .error: return .red
-        case .syncing: return .blue
-        case .offline: return .orange
-        case .idle: return .gray
+        case .success:
+            return .blue
+        case .error:
+            return .red
+        case .syncing:
+            return .orange
+        case .offline:
+            return .gray
+        case .idle:
+            return .secondary
         }
     }
 }
