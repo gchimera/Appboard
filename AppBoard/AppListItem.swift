@@ -3,8 +3,8 @@ import AppKit
 
 struct AppListItem: View {
     let app: AppInfo
-    let onShowDetails: () -> Void
-    
+    let onShowDetails: (AppInfo) -> Void
+
     var body: some View {
         HStack(spacing: 12) {
             // Icona app
@@ -62,7 +62,7 @@ struct AppListItem: View {
         }
         .onTapGesture(count: 2) {
             // Doppio click = mostra dettagli (opzionale)
-            onShowDetails()
+            onShowDetails(app)
         }
         .contextMenu {
             Button("Apri") {
@@ -70,7 +70,7 @@ struct AppListItem: View {
             }
             
             Button("Mostra Dettagli") {
-                onShowDetails()
+                onShowDetails(app)
             }
             
             Divider()

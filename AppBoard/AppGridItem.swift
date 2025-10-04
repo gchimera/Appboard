@@ -3,7 +3,7 @@ import AppKit
 
 struct AppGridItem: View {
     let app: AppInfo
-    let onShowDetails: () -> Void
+    let onShowDetails: (AppInfo) -> Void
     
     var body: some View {
         VStack {
@@ -25,15 +25,15 @@ struct AppGridItem: View {
         }
         .onTapGesture(count: 2) {
             // Doppio click = mostra dettagli (opzionale)
-            onShowDetails()
+            onShowDetails(app)
         }
         .contextMenu {
             Button("Apri") {
-                openApp()
+                onShowDetails(app) // Passa l'app selezionata
             }
             
             Button("Mostra Dettagli") {
-                onShowDetails()
+                onShowDetails(app)
             }
             
             Divider()

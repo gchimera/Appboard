@@ -7,8 +7,7 @@ struct ContentView: View {
     @State private var selectedCategory = "Tutte"
     @State private var viewMode: ViewMode = .grid
     @State private var sortOption: SortOption = .name
-    @State private var showingAppDetails = false
-    @State private var selectedApp: AppInfo?
+    @State private var selectedApp: AppInfo? = nil
     @State private var showingCategoryCreation = false
     
     enum ViewMode {
@@ -92,9 +91,8 @@ struct ContentView: View {
                     if viewMode == .grid {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 20) {
                             ForEach(filteredApps) { app in
-                                AppGridItem(app: app) {
-                                    selectedApp = app
-                                    showingAppDetails = true
+                                AppGridItem(app: app) { selected in
+                                    selectedApp = selected
                                 }
                             }
                         }
@@ -136,17 +134,9 @@ struct ContentView: View {
                             
                             LazyVStack(spacing: 0) {
                                 ForEach(filteredApps) { app in
-                                    AppListItem(app: app) {
-                                        selectedApp = app
-                                        showingAppDetails = true
+                                    AppGridItem(app: app) { selected in
+                                        selectedApp = selected
                                     }
-                                    .background(Color.clear)
-                                    .overlay(
-                                        Rectangle()
-                                            .frame(height: 0.5)
-                                            .foregroundColor(Color.gray.opacity(0.2)),
-                                        alignment: .bottom
-                                    )
                                 }
                             }
                         }
@@ -162,16 +152,8 @@ struct ContentView: View {
             appManager.loadInstalledApps()
         }
         // In ContentView.swift, nella parte body
-        .sheet(isPresented: $showingAppDetails) {
-            if let app = selectedApp {
-                AppDetailView(app: app)
-                    .onAppear {
-                        print("Mostrando dettagli per: \(app.name)")
-                    }
-            } else {
-                Text("Errore: Nessuna app selezionata")
-                    .frame(width: 400, height: 300)
-            }
+        .sheet(item: $selectedApp) { app in
+            AppDetailView(app: app)
         }
         .sheet(isPresented: $showingCategoryCreation) {
             CategoryCreationView { categoryName in
