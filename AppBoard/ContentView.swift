@@ -10,6 +10,8 @@ struct ContentView: View {
     @State private var selectedApp: AppInfo? = nil
     @State private var iconSize: CGFloat = 64
     @State private var showSettings = false
+    @State private var showCategoryCreation = false
+
     
     let iconSizes: [CGFloat] = [32, 48, 64, 96, 128]
     let iconSizeLabels: [CGFloat: String] = [
@@ -76,7 +78,7 @@ struct ContentView: View {
                 .listStyle(SidebarListStyle())
                 
                 Button("Nuova Categoria") {
-                    // Azione creazione categoria
+                    showCategoryCreation = true
                 }
                 .padding()
             }
@@ -147,9 +149,11 @@ struct ContentView: View {
                 
             }
         }
+        
         .sheet(item: $selectedApp) { app in
             AppDetailView(app: app)
         }
+        
         .sheet(isPresented: $showSettings) {
             SettingsView(
                 iconSize: $iconSize,
@@ -157,6 +161,15 @@ struct ContentView: View {
                 iconSizeLabels: iconSizeLabels
             )
         }
+        
+        .sheet(isPresented: $showCategoryCreation) {
+            CategoryCreationView { newCategoryName in
+                appManager.addCustomCategory(newCategoryName)
+                showCategoryCreation = false
+            }
+        }
+
+        
         .onAppear {
             appManager.loadInstalledApps()
         }
