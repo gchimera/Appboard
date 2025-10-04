@@ -65,10 +65,17 @@ struct AppListItem: View {
             onShowDetails(app)
         }
         .contextMenu {
+            // Azione Apri: apre direttamente l'applicazione
             Button("Apri") {
-                openApp()
+                let url = URL(fileURLWithPath: app.path)
+                NSWorkspace.shared.openApplication(
+                    at: url,
+                    configuration: NSWorkspace.OpenConfiguration(),
+                    completionHandler: nil
+                )
             }
             
+            // Mostra Dettagli: mostra la scheda dettagliata
             Button("Mostra Dettagli") {
                 onShowDetails(app)
             }
@@ -78,19 +85,11 @@ struct AppListItem: View {
             Button("Mostra nel Finder") {
                 NSWorkspace.shared.selectFile(app.path, inFileViewerRootedAtPath: "")
             }
-            
             Button("Ottieni Informazioni") {
-                showGetInfo()
-            }
-            
-            Divider()
-            
-            Button("Copia Percorso") {
-                let pasteboard = NSPasteboard.general
-                pasteboard.clearContents()
-                pasteboard.setString(app.path, forType: .string)
+                NSWorkspace.shared.openFile(app.path, withApplication: "Finder")
             }
         }
+
         .help(app.name) // Tooltip
     }
     

@@ -28,10 +28,17 @@ struct AppGridItem: View {
             onShowDetails(app)
         }
         .contextMenu {
+            // Azione Apri: apre direttamente l'applicazione
             Button("Apri") {
-                onShowDetails(app) // Passa l'app selezionata
+                let url = URL(fileURLWithPath: app.path)
+                NSWorkspace.shared.openApplication(
+                    at: url,
+                    configuration: NSWorkspace.OpenConfiguration(),
+                    completionHandler: nil
+                )
             }
             
+            // Mostra Dettagli: mostra la scheda dettagliata
             Button("Mostra Dettagli") {
                 onShowDetails(app)
             }
@@ -41,11 +48,11 @@ struct AppGridItem: View {
             Button("Mostra nel Finder") {
                 NSWorkspace.shared.selectFile(app.path, inFileViewerRootedAtPath: "")
             }
-            
             Button("Ottieni Informazioni") {
-                showGetInfo()
+                NSWorkspace.shared.openFile(app.path, withApplication: "Finder")
             }
         }
+
         .help(app.name) // Tooltip
     }
     
