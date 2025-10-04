@@ -10,9 +10,9 @@ struct AppGridItem: View {
         VStack {
             Image(nsImage: app.iconImage)
                 .resizable()
-                .scaledToFit()   // Usa scaledToFit per mantenere proporzioni
+                .scaledToFit()
                 .frame(width: iconSize, height: iconSize)
-                .padding(8)      // Aggiungi padding per evitare tagli
+                .padding(8)
                 .background(Color(NSColor.controlBackgroundColor).opacity(0.8))
                 .cornerRadius(16)
                 .shadow(radius: 2)
@@ -21,11 +21,9 @@ struct AppGridItem: View {
                 .font(.caption)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 4) // più spazio alle label
-            
+                .padding(.horizontal, 4)
         }
         .frame(width: max(iconSize + 32, 100), height: iconSize + 60)
-        // larghezza minima per il testo, altezza adeguata a icona+testo
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(12)
         .onTapGesture {
@@ -35,31 +33,21 @@ struct AppGridItem: View {
             Button("Apri") {
                 openApp()
             }
-            Button("Mostra dettagli") {
+            Button("Mostra Dettagli") {
                 onShowDetails(app)
             }
+            Divider()
+            Button("Mostra nel Finder") {
+                NSWorkspace.shared.selectFile(app.path, inFileViewerRootedAtPath: "")
+            }
+            Button("Ottieni Informazioni") {
+                NSWorkspace.shared.openFile(app.path, withApplication: "Finder")
+            }
         }
-        .help(app.name) // Tooltip
     }
     
     private func openApp() {
         let url = URL(fileURLWithPath: app.path)
-        NSWorkspace.shared.openApplication(
-            at: url,
-            configuration: NSWorkspace.OpenConfiguration()
-        ) { _, error in
-            if let error = error {
-                print("Errore nell'aprire \(app.name): \(error.localizedDescription)")
-                // Potresti mostrare un alert qui
-            } else {
-                print("Aperta app: \(app.name)")
-            }
-        }
-    }
-    
-    private func showGetInfo() {
-        // Mostra le informazioni dell'app usando Finder
-        NSWorkspace.shared.openFile(app.path, withApplication: "Finder")
+        NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
     }
 }
-

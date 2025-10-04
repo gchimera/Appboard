@@ -1,4 +1,5 @@
 import SwiftUI
+
 struct SettingsView: View {
     @Binding var iconSize: CGFloat
     let iconSizes: [CGFloat]
@@ -10,22 +11,22 @@ struct SettingsView: View {
             Text("Impostazioni")
                 .font(.title)
                 .padding(.top)
-
             Divider()
-            
             HStack {
-                
+                Image(systemName: "app.dashed")
+                    .foregroundColor(.accentColor)
+                Text("Dimensione icone")
+                    .font(.headline)
+                Spacer()
                 Picker("Dimensione icone", selection: $iconSize) {
                     ForEach(iconSizes, id: \.self) { size in
                         Text(iconSizeLabels[size] ?? "\(Int(size)) pt").tag(size)
                     }
                 }
-                .frame(width: 250)
+                .frame(width: 150)
             }
             .padding(.horizontal)
-
             Spacer()
-            
             Button("Chiudi") {
                 dismiss()
             }

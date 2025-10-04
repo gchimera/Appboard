@@ -1,5 +1,5 @@
 import SwiftUI
-import AppKit
+import Combine
 
 struct ContentView: View {
     @StateObject private var appManager = AppManager()
@@ -11,8 +11,9 @@ struct ContentView: View {
     @State private var iconSize: CGFloat = 64
     @State private var showSettings = false
     @State private var showCategoryCreation = false
+    private var notificationCenter = NotificationCenter.default
+    @State private var cancellable: AnyCancellable?
 
-    
     let iconSizes: [CGFloat] = [32, 48, 64, 96, 128]
     let iconSizeLabels: [CGFloat: String] = [
         32: "Piccole",
@@ -21,29 +22,29 @@ struct ContentView: View {
         96: "Grandi",
         128: "Molto grandi"
     ]
-    
+
     enum ViewMode {
         case grid, list
     }
-    
+
     enum SortOption: String, CaseIterable {
         case name = "Nome"
         case category = "Categoria"
         case size = "Dimensione"
         case lastUsed = "Ultimo utilizzo"
     }
-    
+
     var filteredApps: [AppInfo] {
         var apps = appManager.apps
-        
+
         if selectedCategory != "Tutte" {
             apps = apps.filter { $0.category == selectedCategory }
         }
-        
+
         if !searchText.isEmpty {
             apps = apps.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
         }
-        
+
         switch sortOption {
         case .name:
             apps.sort { $0.name < $1.name }
@@ -54,17 +55,17 @@ struct ContentView: View {
         case .lastUsed:
             apps.sort { $0.lastUsed > $1.lastUsed }
         }
-        
+
         return apps
     }
-    
+
     var body: some View {
         NavigationSplitView {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Categorie")
                     .font(.headline)
                     .padding()
-                
+
                 List(appManager.categories, id: \.self, selection: $selectedCategory) { category in
                     HStack {
                         Text(appManager.iconForCategory(category))
@@ -76,7 +77,7 @@ struct ContentView: View {
                     .padding(.vertical, 2)
                 }
                 .listStyle(SidebarListStyle())
-                
+
                 Button("Nuova Categoria") {
                     showCategoryCreation = true
                 }
@@ -90,7 +91,7 @@ struct ContentView: View {
                     sortOption: $sortOption,
                     showSettings: $showSettings
                 )
-                
+
                 ScrollView {
                     if viewMode == .grid {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 20) {
@@ -108,24 +109,24 @@ struct ContentView: View {
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .frame(width: 200, alignment: .leading)
-                                
+
                                 Spacer()
-                                
+
                                 Text("Categoria")
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .frame(width: 100, alignment: .trailing)
-                                
+
                                 Text("Versione")
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .frame(width: 60, alignment: .trailing)
-                                
+
                                 Text("Dimensione")
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .frame(width: 80, alignment: .trailing)
-                                
+
                                 Text("Ultimo Uso")
                                     .font(.caption)
                                     .fontWeight(.semibold)
@@ -134,7 +135,7 @@ struct ContentView: View {
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
                             .background(Color.gray.opacity(0.1))
-                            
+
                             LazyVStack(spacing: 0) {
                                 ForEach(filteredApps) { app in
                                     AppListItem(app: app) { selected in
@@ -146,14 +147,12 @@ struct ContentView: View {
                     }
                 }
                 FooterView(totalApps: appManager.apps.count, filteredCount: filteredApps.count)
-                
+
             }
         }
-        
         .sheet(item: $selectedApp) { app in
             AppDetailView(app: app)
         }
-        
         .sheet(isPresented: $showSettings) {
             SettingsView(
                 iconSize: $iconSize,
@@ -161,17 +160,24 @@ struct ContentView: View {
                 iconSizeLabels: iconSizeLabels
             )
         }
-        
         .sheet(isPresented: $showCategoryCreation) {
             CategoryCreationView { newCategoryName in
                 appManager.addCustomCategory(newCategoryName)
                 showCategoryCreation = false
             }
         }
-
-        
         .onAppear {
             appManager.loadInstalledApps()
+
+            cancellable = notificationCenter.publisher(for: NSApplication.willBecomeActiveNotification)
+                .sink { _ in
+                    if !appManager.isLoaded {
+                        appManager.loadInstalledApps()
+                    }
+                }
+        }
+        .onDisappear {
+            cancellable?.cancel()
         }
     }
 }

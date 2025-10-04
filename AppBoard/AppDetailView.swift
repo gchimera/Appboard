@@ -7,7 +7,6 @@ struct AppDetailView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header visivo in stile nativo
             HStack(alignment: .center, spacing: 20) {
                 Image(nsImage: app.iconImage)
                     .resizable()
@@ -23,11 +22,6 @@ struct AppDetailView: View {
                     Text("Versione \(app.version)")
                         .font(.callout)
                         .foregroundColor(.secondary)
-                    if !app.developer.isEmpty {
-                        Text(app.developer)
-                            .font(.caption)
-                            .foregroundColor(.accentColor)
-                    }
                 }
                 Spacer()
                 Button {
@@ -46,8 +40,6 @@ struct AppDetailView: View {
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    
-                    // Azioni rapide con pulsanti stilizzati stile macOS
                     HStack(spacing: 16) {
                         Button(action: openApp) {
                             Label("Apri App", systemImage: "play.fill")
@@ -64,10 +56,7 @@ struct AppDetailView: View {
                         }
                         .buttonStyle(.bordered)
                     }
-                    
                     Divider()
-                    
-                    // Info dettagliata molto leggibile
                     infoRow(label: "Categoria", value: app.category, icon: "tag.fill")
                     infoRow(label: "Dimensione", value: app.size, icon: "internaldrive")
                     infoRow(label: "Bundle ID", value: app.bundleIdentifier, icon: "doc.plaintext")
@@ -103,15 +92,17 @@ struct AppDetailView: View {
         formatter.locale = Locale(identifier: "it_IT")
         return formatter.string(from: date)
     }
-
+    
     private func openApp() {
         let url = URL(fileURLWithPath: app.path)
         NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration(), completionHandler: nil)
         dismiss()
     }
+    
     private func showInFinder() {
         NSWorkspace.shared.selectFile(app.path, inFileViewerRootedAtPath: "")
     }
+    
     private func copyPath() {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
