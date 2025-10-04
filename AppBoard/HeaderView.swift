@@ -1,11 +1,10 @@
 import SwiftUI
-import AppKit
 
-// HeaderView.swift
 struct HeaderView: View {
     @Binding var searchText: String
     @Binding var viewMode: ContentView.ViewMode
     @Binding var sortOption: ContentView.SortOption
+    @Binding var showSettings: Bool
     
     var body: some View {
         HStack {
@@ -33,6 +32,16 @@ struct HeaderView: View {
                 Image(systemName: "list.bullet").tag(ContentView.ViewMode.list)
             }
             .pickerStyle(SegmentedPickerStyle())
+            .frame(width: 100)
+            
+            Button {
+                showSettings = true
+            } label: {
+                Image(systemName: "gearshape")
+                    .imageScale(.large)
+                    .help("Impostazioni")
+            }
+            .buttonStyle(.plain)
         }
         .padding()
         .background(Color(NSColor.controlBackgroundColor))

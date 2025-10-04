@@ -8,8 +8,18 @@ struct ContentView: View {
     @State private var viewMode: ViewMode = .grid
     @State private var sortOption: SortOption = .name
     @State private var selectedApp: AppInfo? = nil
-    @State private var iconSize: CGFloat = 64 // Dimensione icone variabile
-
+    @State private var iconSize: CGFloat = 64
+    @State private var showSettings = false
+    
+    let iconSizes: [CGFloat] = [32, 48, 64, 96, 128]
+    let iconSizeLabels: [CGFloat: String] = [
+        32: "Piccole",
+        48: "Compatte",
+        64: "Medie",
+        96: "Grandi",
+        128: "Molto grandi"
+    ]
+    
     enum ViewMode {
         case grid, list
     }
@@ -66,26 +76,26 @@ struct ContentView: View {
                 .listStyle(SidebarListStyle())
                 
                 Button("Nuova Categoria") {
-                    // Azione per creare categoria (da implementare)
+                    // Azione creazione categoria
                 }
                 .padding()
             }
         } detail: {
             VStack(spacing: 0) {
-                // Header con ricerca e ordinamento
-                headerView
+                HeaderView(
+                    searchText: $searchText,
+                    viewMode: $viewMode,
+                    sortOption: $sortOption,
+                    showSettings: $showSettings
+                )
                 
-                // Slider per modificare la dimensione icone
-                iconSizeSlider
-                
-                // Contenuto app
                 ScrollView {
                     if viewMode == .grid {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 20) {
                             ForEach(filteredApps) { app in
-                                AppGridItem(app: app, iconSize: iconSize, onShowDetails: { selected in
+                                AppGridItem(app: app, iconSize: iconSize) { selected in
                                     selectedApp = selected
-                                })
+                                }
                             }
                         }
                         .padding()
@@ -134,56 +144,21 @@ struct ContentView: View {
                     }
                 }
                 FooterView(totalApps: appManager.apps.count, filteredCount: filteredApps.count)
+                
             }
         }
         .sheet(item: $selectedApp) { app in
             AppDetailView(app: app)
         }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(
+                iconSize: $iconSize,
+                iconSizes: iconSizes,
+                iconSizeLabels: iconSizeLabels
+            )
+        }
         .onAppear {
             appManager.loadInstalledApps()
         }
     }
-    
-    private var headerView: some View {
-        HStack {
-            TextField("Cerca applicazioni...", text: $searchText)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .frame(maxWidth: 300)
-            
-            Spacer()
-            
-            Text("💡 Click per aprire • Click destro per opzioni")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            Spacer()
-            
-            Picker("Ordina per", selection: $sortOption) {
-                ForEach(SortOption.allCases, id: \.self) { option in
-                    Text(option.rawValue).tag(option)
-                }
-            }
-            .frame(width: 150)
-            
-            Picker("Vista", selection: $viewMode) {
-                Image(systemName: "square.grid.2x2").tag(ViewMode.grid)
-                Image(systemName: "list.bullet").tag(ViewMode.list)
-            }
-            .pickerStyle(SegmentedPickerStyle())
-        }
-        .padding()
-        .background(Color(NSColor.controlBackgroundColor))
-    }
-    
-    private var iconSizeSlider: some View {
-        HStack {
-            Text("Dimensione icone:")
-            Slider(value: $iconSize, in: 32...128, step: 8)
-                .frame(width: 150)
-            Text("\(Int(iconSize)) pt")
-                .frame(width: 50)
-        }
-        .padding(.horizontal)
-    }
 }
-
