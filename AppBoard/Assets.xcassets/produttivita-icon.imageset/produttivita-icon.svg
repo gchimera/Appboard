@@ -1,0 +1,41 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="prodGrad1" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#34C759;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#48E26A;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="prodBg" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#F2F2F7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect x="2" y="2" width="28" height="28" fill="url(#prodBg)" rx="6" stroke="#E5E5EA" stroke-width="1"/>
+  
+  <!-- Chart bars with nice spacing -->
+  <rect x="6" y="22" width="3" height="6" fill="url(#prodGrad1)" rx="1.5"/>
+  <rect x="11" y="18" width="3" height="10" fill="url(#prodGrad1)" rx="1.5"/>
+  <rect x="16" y="14" width="3" height="14" fill="url(#prodGrad1)" rx="1.5"/>
+  <rect x="21" y="10" width="3" height="18" fill="url(#prodGrad1)" rx="1.5"/>
+  
+  <!-- Trend line -->
+  <path d="M7.5 24 L12.5 20 L17.5 16 L22.5 12" stroke="#30D158" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Data points -->
+  <circle cx="7.5" cy="24" r="1.5" fill="#30D158"/>
+  <circle cx="12.5" cy="20" r="1.5" fill="#30D158"/>
+  <circle cx="17.5" cy="16" r="1.5" fill="#30D158"/>
+  <circle cx="22.5" cy="12" r="1.5" fill="#30D158"/>
+  
+  <!-- Success indicator -->
+  <path d="M25 8 L27 10 L30 6" stroke="#30D158" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Grid lines (subtle) -->
+  <g opacity="0.2">
+    <line x1="4" y1="26" x2="26" y2="26" stroke="#8E8E93" stroke-width="0.5"/>
+    <line x1="4" y1="22" x2="26" y2="22" stroke="#8E8E93" stroke-width="0.5"/>
+    <line x1="4" y1="18" x2="26" y2="18" stroke="#8E8E93" stroke-width="0.5"/>
+    <line x1="4" y1="14" x2="26" y2="14" stroke="#8E8E93" stroke-width="0.5"/>
+  </g>
+</svg>

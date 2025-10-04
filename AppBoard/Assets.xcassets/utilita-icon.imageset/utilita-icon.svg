@@ -1,0 +1,38 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="utilitaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8E8E93;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#636366;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#48484A;stop-opacity:1" />
+    </linearGradient>
+    <filter id="utilitaGlow">
+      <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Wrench -->
+  <path d="M6 20L12 14L14 12C14 10 15 9 16 9C17 9 18 10 18 12L16 14L18 16L20 14C21 14 22 15 22 16C22 17 21 18 20 18L18 20L12 26L10 24L6 20Z" fill="url(#utilitaGrad)" filter="url(#utilitaGlow)"/>
+  
+  <!-- Screwdriver -->
+  <path d="M20 4L24 8L26 6L28 8L24 12L22 10L20 12L18 10L20 4Z" fill="url(#utilitaGrad)" filter="url(#utilitaGlow)"/>
+  <rect x="14" y="12" width="2" height="12" fill="url(#utilitaGrad)" filter="url(#utilitaGlow)" rx="1" transform="rotate(45 15 18)"/>
+  
+  <!-- Gear detail -->
+  <circle cx="8" cy="22" r="2" fill="none" stroke="#FFFFFF" stroke-width="1" opacity="0.7"/>
+  
+  <!-- Tool handle details -->
+  <g opacity="0.6">
+    <line x1="17" y1="19" x2="19" y2="21" stroke="#FFFFFF" stroke-width="1"/>
+    <line x1="18" y1="20" x2="20" y2="22" stroke="#FFFFFF" stroke-width="1"/>
+  </g>
+  
+  <!-- Sparkle effects -->
+  <g opacity="0.8">
+    <path d="M26 18L28 20L26 22L24 20Z" fill="#FFFFFF"/>
+    <path d="M27 19L28 20L27 21L26 20Z" fill="#FFFFFF"/>
+  </g>
+</svg>

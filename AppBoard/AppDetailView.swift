@@ -91,8 +91,11 @@ struct AppDetailView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Categoria").font(.caption).foregroundColor(.secondary)
                 HStack {
-                    Text("\(appManager.iconForCategory(app.category)) \(app.category)")
-                        .font(.body)
+                    HStack(spacing: 6) {
+                        CategoryIconView(category: app.category, size: 16)
+                        Text(app.category)
+                            .font(.body)
+                    }
                     Spacer()
                     Button("Cambia") {
                         showCategorySelector = true

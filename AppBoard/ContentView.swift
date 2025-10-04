@@ -10,7 +10,6 @@ struct ContentView: View {
     @State private var selectedApp: AppInfo? = nil
     @State private var iconSize: CGFloat = 64
     @State private var showSettings = false
-    @State private var showCategoryCreation = false
     @State private var showCategoryManagement = false
     private var notificationCenter = NotificationCenter.default
     @State private var cancellable: AnyCancellable?
@@ -69,7 +68,7 @@ struct ContentView: View {
 
                 List(appManager.categories, id: \.self, selection: $selectedCategory) { category in
                     HStack {
-                        Text(appManager.iconForCategory(category))
+                        CategoryIconView(category: category, size: 18, appManager: appManager)
                         Text(category)
                         Spacer()
                         Text("\(appManager.countForCategory(category))")
@@ -80,10 +79,6 @@ struct ContentView: View {
                 .listStyle(SidebarListStyle())
 
                 VStack(spacing: 8) {
-                    Button("Nuova Categoria") {
-                        showCategoryCreation = true
-                    }
-                    
                     Button("Gestisci Categorie") {
                         showCategoryManagement = true
                     }
@@ -169,12 +164,6 @@ struct ContentView: View {
                 iconSizes: iconSizes,
                 iconSizeLabels: iconSizeLabels
             )
-        }
-        .sheet(isPresented: $showCategoryCreation) {
-            CategoryCreationView { newCategoryName in
-                appManager.addCustomCategory(newCategoryName)
-                showCategoryCreation = false
-            }
         }
         .sheet(isPresented: $showCategoryManagement) {
             CategoryManagementView(appManager: appManager)

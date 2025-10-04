@@ -5,9 +5,8 @@ struct CategoryCreationView: View {
     @State private var categoryName: String = ""
     @State private var selectedIcon: String = "📁"
     
+    let appManager: AppManager
     let onSave: (String) -> Void
-    
-    private let availableIcons = ["📁", "🎯", "⭐", "🔥", "💼", "🎭", "🚀", "⚡", "🎪", "🎨", "🔧", "📚", "🎵", "📊", "💎", "🎮"]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -43,24 +42,8 @@ struct CategoryCreationView: View {
                 Text("Icona")
                     .font(.headline)
                 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 8), spacing: 8) {
-                    ForEach(availableIcons, id: \.self) { icon in
-                        Button(action: {
-                            selectedIcon = icon
-                        }) {
-                            Text(icon)
-                                .font(.title2)
-                                .frame(width: 40, height: 40)
-                                .background(selectedIcon == icon ? Color.blue.opacity(0.2) : Color.clear)
-                                .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(selectedIcon == icon ? Color.blue : Color.clear, lineWidth: 2)
-                                )
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                }
+                CategoryIconPicker(selectedIcon: $selectedIcon)
+                    .frame(height: 280)
             }
             
             // Anteprima
@@ -69,7 +52,12 @@ struct CategoryCreationView: View {
                     .font(.headline)
                 
                 HStack {
-                    Text(selectedIcon)
+                    if selectedIcon.isEmpty {
+                        CategoryIconView(category: categoryName.isEmpty ? "Nome Categoria" : categoryName, size: 18, appManager: appManager)
+                    } else {
+                        Text(selectedIcon)
+                            .font(.system(size: 18))
+                    }
                     Text(categoryName.isEmpty ? "Nome Categoria" : categoryName)
                         .foregroundColor(categoryName.isEmpty ? .secondary : .primary)
                     Spacer()
@@ -99,12 +87,16 @@ struct CategoryCreationView: View {
             }
         }
         .padding()
-        .frame(width: 400, height: 500)
+        .frame(width: 550, height: 650)
     }
     
     private func saveCategory() {
         let trimmedName = categoryName.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedName.isEmpty {
+            // Salva l'associazione icona-categoria se è stata selezionata un'icona personalizzata
+            if !selectedIcon.isEmpty && selectedIcon != "📁" {
+                appManager.setCustomCategoryIcon(category: trimmedName, iconName: selectedIcon)
+            }
             onSave(trimmedName)
             dismiss()
         }
@@ -113,7 +105,7 @@ struct CategoryCreationView: View {
 
 // Preview per sviluppo
 #Preview {
-    CategoryCreationView { categoryName in
+    CategoryCreationView(appManager: AppManager()) { categoryName in
         print("Nuova categoria: \(categoryName)")
     }
 }

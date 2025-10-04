@@ -1,0 +1,41 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="secGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#34C759;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#30A14E;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="secGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD60A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFCC00;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main shield -->
+  <path d="M16 3 L25 7 L25 16 C25 21.5 21 26 16 28 C11 26 7 21.5 7 16 L7 7 Z" fill="url(#secGrad1)"/>
+  
+  <!-- Shield border -->
+  <path d="M16 4 L24 7.5 L24 15.8 C24 20.8 20.5 25 16 26.8 C11.5 25 8 20.8 8 15.8 L8 7.5 Z" fill="none" stroke="#FFFFFF" stroke-width="0.8" opacity="0.3"/>
+  
+  <!-- Lock body -->
+  <rect x="12" y="16" width="8" height="6" fill="url(#secGrad2)" rx="1.5"/>
+  
+  <!-- Lock shackle -->
+  <path d="M13.5 16 L13.5 13.5 C13.5 11.6 14.6 10.5 16 10.5 C17.4 10.5 18.5 11.6 18.5 13.5 L18.5 16" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round"/>
+  
+  <!-- Key hole -->
+  <circle cx="16" cy="18.5" r="1.2" fill="#FFFFFF" opacity="0.9"/>
+  <rect x="15.6" y="18.8" width="0.8" height="2" fill="#FFFFFF" opacity="0.9" rx="0.4"/>
+  
+  <!-- Security check mark -->
+  <g transform="translate(16,6)">
+    <circle r="3" fill="#FFFFFF" opacity="0.9"/>
+    <path d="M-1 0 L0 1 L1.5 -0.5" stroke="url(#secGrad1)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- Corner security indicators -->
+  <circle cx="10" cy="10" r="1" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="22" cy="10" r="1" fill="#FFFFFF" opacity="0.7"/>
+  
+  <!-- Shield shine effect -->
+  <ellipse cx="16" cy="12" rx="6" ry="4" fill="#FFFFFF" opacity="0.15"/>
+</svg>

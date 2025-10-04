@@ -51,7 +51,7 @@ struct CategorySelectorView: View {
                     .font(.headline)
                 
                 HStack {
-                    Text(appManager.iconForCategory(app.category))
+                    CategoryIconView(category: app.category, size: 20)
                     Text(app.category)
                         .font(.body)
                     Spacer()
@@ -72,7 +72,7 @@ struct CategorySelectorView: View {
                             selectedCategory = category
                         }) {
                             HStack {
-                                Text(appManager.iconForCategory(category))
+                                CategoryIconView(category: category, size: 20)
                                 Text(category)
                                     .font(.body)
                                 Spacer()

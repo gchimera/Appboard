@@ -1,0 +1,19 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Modern communication icon with chat bubbles -->
+<path d="M8 2C5.79086 2 4 3.79086 4 6V10C4 12.2091 5.79086 14 8 14H8.58579L12 17.4142V14H14C16.2091 14 18 12.2091 18 10V6C18 3.79086 16.2091 2 14 2H8Z" fill="currentColor" opacity="0.8"/>
+<path d="M8.5 2.5C6.567 2.5 5 4.067 5 6V10C5 11.933 6.567 13.5 8.5 13.5H9L12.5 17V13.5H13.5C15.433 13.5 17 11.933 17 10V6C17 4.067 15.433 2.5 13.5 2.5H8.5Z" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+<!-- Second chat bubble (overlapping) -->
+<path d="M10 8C10 5.79086 11.7909 4 14 4H18C20.2091 4 22 5.79086 22 8V12C22 14.2091 20.2091 16 18 16H16V19.4142L12.5858 16H14C11.7909 16 10 14.2091 10 12V8Z" fill="currentColor" opacity="0.6"/>
+<!-- Chat dots in bubbles -->
+<circle cx="9" cy="8" r="0.8" fill="white" opacity="0.7"/>
+<circle cx="11" cy="8" r="0.8" fill="white" opacity="0.7"/>
+<circle cx="13" cy="8" r="0.8" fill="white" opacity="0.7"/>
+<!-- Communication dots in second bubble -->
+<circle cx="16" cy="10" r="0.6" fill="white" opacity="0.5"/>
+<circle cx="18" cy="10" r="0.6" fill="white" opacity="0.5"/>
+<!-- Signal waves -->
+<path d="M2 4C2.5 4.5 3 5 3 6C3 7 2.5 7.5 2 8" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<path d="M1 2C2 3 2.5 4.5 2.5 6C2.5 7.5 2 9 1 10" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
+<!-- Connection line -->
+<path d="M15 9L17 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.2"/>
+</svg>

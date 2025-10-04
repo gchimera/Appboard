@@ -8,7 +8,6 @@ struct CategoryManagementView: View {
     @State private var showingDeleteAlert = false
     @State private var categoryToDelete: String?
     @State private var showingCreateNew = false
-    @State private var newCategoryName = ""
     
     var body: some View {
         VStack(spacing: 0) {
@@ -50,7 +49,6 @@ struct CategoryManagementView: View {
                     // Pulsante per aggiungere nuova categoria
                     Button(action: {
                         showingCreateNew = true
-                        newCategoryName = ""
                     }) {
                         HStack {
                             Image(systemName: "plus.circle.fill")
@@ -75,7 +73,10 @@ struct CategoryManagementView: View {
         }
         .frame(width: 500, height: 600)
         .sheet(isPresented: $showingCreateNew) {
-            createNewCategorySheet()
+            CategoryCreationView(appManager: appManager) { newCategoryName in
+                appManager.addCustomCategory(newCategoryName)
+                showingCreateNew = false
+            }
         }
         .alert("Elimina Categoria", isPresented: $showingDeleteAlert) {
             Button("Elimina", role: .destructive) {
@@ -119,8 +120,7 @@ struct CategoryManagementView: View {
     @ViewBuilder
     private func defaultCategoryRow(_ category: String) -> some View {
         HStack {
-            Text(appManager.iconForCategory(category))
-                .font(.title2)
+            CategoryIconView(category: category, size: 24, appManager: appManager)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(category)
@@ -149,8 +149,7 @@ struct CategoryManagementView: View {
     @ViewBuilder
     private func customCategoryRow(_ category: String) -> some View {
         HStack {
-            Text(appManager.iconForCategory(category))
-                .font(.title2)
+            CategoryIconView(category: category, size: 24, appManager: appManager)
             
             if editingCategory == category {
                 // Modalità editing
@@ -236,38 +235,6 @@ struct CategoryManagementView: View {
         )
     }
     
-    @ViewBuilder
-    private func createNewCategorySheet() -> some View {
-        VStack(spacing: 20) {
-            Text("Nuova Categoria")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            TextField("Nome della categoria", text: $newCategoryName)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .onSubmit {
-                    createNewCategory()
-                }
-            
-            HStack {
-                Button("Annulla") {
-                    showingCreateNew = false
-                }
-                .keyboardShortcut(.cancelAction)
-                
-                Spacer()
-                
-                Button("Crea") {
-                    createNewCategory()
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(newCategoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .keyboardShortcut(.defaultAction)
-            }
-        }
-        .padding()
-        .frame(width: 300, height: 150)
-    }
     
     // MARK: - Actions
     
@@ -296,14 +263,6 @@ struct CategoryManagementView: View {
         newName = ""
     }
     
-    private func createNewCategory() {
-        let trimmedName = newCategoryName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedName.isEmpty {
-            appManager.addCustomCategory(trimmedName)
-            showingCreateNew = false
-            newCategoryName = ""
-        }
-    }
 }
 
 // Preview per sviluppo

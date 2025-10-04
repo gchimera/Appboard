@@ -5,11 +5,11 @@ import Combine
 @MainActor
 class AppManager: ObservableObject {
     @Published var apps: [AppInfo] = []
-    @Published var categories: [String] = ["Tutte", "Sistema", "Produttività", "Creatività", "Sviluppo", "Giochi", "Social", "Utilità"]
+    @Published var categories: [String] = ["Tutte", "Sistema", "Produttività", "Creatività", "Sviluppo", "Giochi", "Social", "Utilità", "Educazione", "Sicurezza", "Multimedia", "Comunicazione", "Finanza", "Salute", "News"]
     var isLoaded = false
     
     // Categorie predefinite che non possono essere eliminate o rinominate
-    private let defaultCategories: Set<String> = ["Tutte", "Sistema", "Produttività", "Creatività", "Sviluppo", "Giochi", "Social", "Utilità"]
+    private let defaultCategories: Set<String> = ["Tutte", "Sistema", "Produttività", "Creatività", "Sviluppo", "Giochi", "Social", "Utilità", "Educazione", "Sicurezza", "Multimedia", "Comunicazione", "Finanza", "Salute", "News"]
     
     init() {
         loadCustomCategories()
@@ -146,47 +146,101 @@ class AppManager: ObservableObject {
             switch categoryType {
             case "public.app-category.productivity": return "Produttività"
             case "public.app-category.graphics-design": return "Creatività"
-            case "public.app-category.photography": return "Creatività"
-            case "public.app-category.video": return "Creatività"
-            case "public.app-category.music": return "Creatività"
+            case "public.app-category.photography": return "Multimedia"
+            case "public.app-category.video": return "Multimedia"
+            case "public.app-category.music": return "Multimedia"
             case "public.app-category.developer-tools": return "Sviluppo"
             case "public.app-category.games": return "Giochi"
             case "public.app-category.social-networking": return "Social"
             case "public.app-category.utilities": return "Utilità"
-            case "public.app-category.business": return "Produttività"
-            case "public.app-category.education": return "Produttività"
-            case "public.app-category.entertainment": return "Giochi"
+            case "public.app-category.business": return "Finanza"
+            case "public.app-category.education": return "Educazione"
+            case "public.app-category.entertainment": return "Multimedia"
+            case "public.app-category.medical": return "Salute"
+            case "public.app-category.news": return "News"
+            case "public.app-category.finance": return "Finanza"
             default: break
             }
         }
         let lowerName = name.lowercased()
         let lowerBundle = bundleId.lowercased()
+        
+        // Sistema
         if lowerBundle.contains("apple") || lowerBundle.hasPrefix("com.apple") {
             if lowerName.contains("safari") || lowerName.contains("finder") {
                 return "Sistema"
             }
         }
-        if lowerName.contains("xcode") || lowerName.contains("terminal") || lowerName.contains("visual studio") {
+        
+        // Sviluppo
+        if ["xcode", "terminal", "visual studio", "android studio", "intellij", "eclipse", "sublime", "atom", "vscode"].contains(where: lowerName.contains) {
             return "Sviluppo"
         }
-        if ["photoshop", "sketch", "final cut", "logic", "garageband", "adobe", "affinity"].contains(where: lowerName.contains) {
+        
+        // Creatività
+        if ["photoshop", "illustrator", "sketch", "final cut", "logic", "garageband", "adobe", "affinity", "blender", "maya"].contains(where: lowerName.contains) {
             return "Creatività"
         }
-        if ["word", "excel", "powerpoint", "notion", "office", "pages", "numbers", "keynote"].contains(where: lowerName.contains) {
+        
+        // Multimedia
+        if ["vlc", "quicktime", "itunes", "spotify", "netflix", "youtube", "plex", "kodi", "handbrake"].contains(where: lowerName.contains) {
+            return "Multimedia"
+        }
+        
+        // Produttività
+        if ["word", "excel", "powerpoint", "notion", "office", "pages", "numbers", "keynote", "evernote", "onenote"].contains(where: lowerName.contains) {
             return "Produttività"
         }
-        if ["steam", "game", "minecraft"].contains(where: lowerName.contains) {
-            return "Giochi"
+        
+        // Comunicazione
+        if ["slack", "discord", "telegram", "whatsapp", "zoom", "teams", "skype", "facetime", "messages"].contains(where: lowerName.contains) {
+            return "Comunicazione"
         }
-        if ["slack", "discord", "telegram", "whatsapp", "zoom", "teams"].contains(where: lowerName.contains) {
+        
+        // Social
+        if ["facebook", "twitter", "instagram", "linkedin", "tiktok", "snapchat", "reddit"].contains(where: lowerName.contains) {
             return "Social"
         }
+        
+        // Giochi
+        if ["steam", "game", "minecraft", "epic games", "battle.net", "origin"].contains(where: lowerName.contains) {
+            return "Giochi"
+        }
+        
+        // Educazione
+        if ["khan academy", "duolingo", "anki", "coursera", "udemy", "books", "kindle"].contains(where: lowerName.contains) {
+            return "Educazione"
+        }
+        
+        // Sicurezza
+        if ["1password", "bitwarden", "keychain", "malwarebytes", "antivirus", "vpn", "nordvpn", "expressvpn"].contains(where: lowerName.contains) {
+            return "Sicurezza"
+        }
+        
+        // Finanza
+        if ["banking", "paypal", "stripe", "quickbooks", "mint", "ynab", "wallet", "investing"].contains(where: lowerName.contains) {
+            return "Finanza"
+        }
+        
+        // Salute
+        if ["health", "fitness", "workout", "myfitnesspal", "strava", "fitbit", "apple health"].contains(where: lowerName.contains) {
+            return "Salute"
+        }
+        
+        // News
+        if ["news", "rss", "feedly", "pocket", "instapaper", "medium", "substack"].contains(where: lowerName.contains) {
+            return "News"
+        }
+        
         return "Utilità"
     }
 
-    func addCustomCategory(_ name: String) {
+    func addCustomCategory(_ name: String, icon: String? = nil) {
         if !categories.contains(name) {
             categories.append(name)
+            if let iconName = icon {
+                setCustomCategoryIcon(category: name, iconName: iconName)
+            }
             saveCustomCategories()
         }
     }
@@ -201,6 +255,13 @@ class AppManager: ObservableObject {
         case "Giochi": return "🎮"
         case "Social": return "💬"
         case "Utilità": return "🔧"
+        case "Educazione": return "🎓"
+        case "Sicurezza": return "🔒"
+        case "Multimedia": return "🎥"
+        case "Comunicazione": return "📞"
+        case "Finanza": return "💰"
+        case "Salute": return "❤️"
+        case "News": return "📰"
         default: return "📁"
         }
     }
@@ -367,6 +428,24 @@ class AppManager: ObservableObject {
         return true
     }
     
+    // MARK: Custom Category Icons
+    
+    private var customCategoryIcons: [String: String] = [:]
+    
+    func setCustomCategoryIcon(category: String, iconName: String) {
+        customCategoryIcons[category] = iconName
+        saveCustomCategoryIcons()
+    }
+    
+    func getCustomCategoryIcon(category: String) -> String? {
+        return customCategoryIcons[category]
+    }
+    
+    func removeCustomCategoryIcon(category: String) {
+        customCategoryIcons.removeValue(forKey: category)
+        saveCustomCategoryIcons()
+    }
+    
     // MARK: Custom Categories Storage
     
     private func saveCustomCategories() {
@@ -384,6 +463,17 @@ class AppManager: ObservableObject {
                 }
             }
             print("Categorie personalizzate caricate: \(saved)")
+        }
+        loadCustomCategoryIcons()
+    }
+    
+    private func saveCustomCategoryIcons() {
+        UserDefaults.standard.set(customCategoryIcons, forKey: "customCategoryIcons")
+    }
+    
+    private func loadCustomCategoryIcons() {
+        if let saved = UserDefaults.standard.dictionary(forKey: "customCategoryIcons") as? [String: String] {
+            customCategoryIcons = saved
         }
     }
 

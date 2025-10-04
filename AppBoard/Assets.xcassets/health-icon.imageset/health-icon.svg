@@ -1,0 +1,17 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Modern health icon with heart and medical elements -->
+<path d="M12 21C12 21 20 15 20 9C20 6.79086 18.2091 5 16 5C14.5 5 13.3 5.8 12 7C10.7 5.8 9.5 5 8 5C5.79086 5 4 6.79086 4 9C4 15 12 21 12 21Z" fill="currentColor" opacity="0.8"/>
+<path d="M12 20C12 20 19 14.5 19 9C19 7.34315 17.6569 6 16 6C14.8 6 13.8 6.6 12 8C10.2 6.6 9.2 6 8 6C6.34315 6 5 7.34315 5 9C5 14.5 12 20 12 20Z" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+<!-- Medical cross inside heart -->
+<rect x="11" y="8" width="2" height="6" rx="0.5" fill="white" opacity="0.9"/>
+<rect x="8" y="10" width="8" height="2" rx="0.5" fill="white" opacity="0.9"/>
+<!-- Heartbeat line -->
+<path d="M2 12H6L8 8L10 16L12 4L14 20L16 10L18 14L22 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+<!-- Health pulse dots -->
+<circle cx="3" cy="15" r="0.4" fill="currentColor" opacity="0.4"/>
+<circle cx="21" cy="9" r="0.5" fill="currentColor" opacity="0.5"/>
+<circle cx="19" cy="16" r="0.3" fill="currentColor" opacity="0.3"/>
+<!-- Wellness accent -->
+<circle cx="16" cy="3" r="0.8" fill="currentColor" opacity="0.4"/>
+<circle cx="8" cy="18" r="0.6" fill="currentColor" opacity="0.3"/>
+</svg>
