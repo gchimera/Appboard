@@ -32,7 +32,12 @@ struct AppGridItem: View {
             openApp()
         }
         .contextMenu {
-            // menu contestuale qui...
+            Button("Apri") {
+                openApp()
+            }
+            Button("Mostra dettagli") {
+                onShowDetails(app)
+            }
         }
         .help(app.name) // Tooltip
     }
