@@ -8,8 +8,8 @@ struct ContentView: View {
     @State private var viewMode: ViewMode = .grid
     @State private var sortOption: SortOption = .name
     @State private var selectedApp: AppInfo? = nil
-    @State private var showingCategoryCreation = false
-    
+    @State private var iconSize: CGFloat = 64 // Dimensione icone variabile
+
     enum ViewMode {
         case grid, list
     }
@@ -24,17 +24,14 @@ struct ContentView: View {
     var filteredApps: [AppInfo] {
         var apps = appManager.apps
         
-        // Filtra per categoria
         if selectedCategory != "Tutte" {
             apps = apps.filter { $0.category == selectedCategory }
         }
         
-        // Filtra per ricerca
         if !searchText.isEmpty {
             apps = apps.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
         }
         
-        // Ordina
         switch sortOption {
         case .name:
             apps.sort { $0.name < $1.name }
@@ -51,7 +48,6 @@ struct ContentView: View {
     
     var body: some View {
         NavigationSplitView {
-            // Sidebar - Categorie
             VStack(alignment: .leading, spacing: 0) {
                 Text("Categorie")
                     .font(.headline)
@@ -70,36 +66,31 @@ struct ContentView: View {
                 .listStyle(SidebarListStyle())
                 
                 Button("Nuova Categoria") {
-                    showingCategoryCreation = true
+                    // Azione per creare categoria (da implementare)
                 }
                 .padding()
             }
         } detail: {
-            // Area principale
             VStack(spacing: 0) {
-                // Header con ricerca e controlli
-                HeaderView(
-                    searchText: $searchText,
-                    viewMode: $viewMode,
-                    sortOption: $sortOption
-                )
+                // Header con ricerca e ordinamento
+                headerView
                 
-                // Contenuto principale
-                // Nel body di ContentView.swift, sostituisci la sezione ScrollView con:
-
+                // Slider per modificare la dimensione icone
+                iconSizeSlider
+                
+                // Contenuto app
                 ScrollView {
                     if viewMode == .grid {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 20) {
                             ForEach(filteredApps) { app in
-                                AppGridItem(app: app) { selected in
+                                AppGridItem(app: app, iconSize: iconSize, onShowDetails: { selected in
                                     selectedApp = selected
-                                }
+                                })
                             }
                         }
                         .padding()
                     } else {
                         VStack(spacing: 1) {
-                            // Header della lista
                             HStack(spacing: 12) {
                                 Text("Nome")
                                     .font(.caption)
@@ -134,7 +125,7 @@ struct ContentView: View {
                             
                             LazyVStack(spacing: 0) {
                                 ForEach(filteredApps) { app in
-                                    AppGridItem(app: app) { selected in
+                                    AppListItem(app: app) { selected in
                                         selectedApp = selected
                                     }
                                 }
@@ -142,23 +133,57 @@ struct ContentView: View {
                         }
                     }
                 }
-
-                
-                // Footer
                 FooterView(totalApps: appManager.apps.count, filteredCount: filteredApps.count)
             }
+        }
+        .sheet(item: $selectedApp) { app in
+            AppDetailView(app: app)
         }
         .onAppear {
             appManager.loadInstalledApps()
         }
-        // In ContentView.swift, nella parte body
-        .sheet(item: $selectedApp) { app in
-            AppDetailView(app: app)
-        }
-        .sheet(isPresented: $showingCategoryCreation) {
-            CategoryCreationView { categoryName in
-                appManager.addCustomCategory(categoryName)
+    }
+    
+    private var headerView: some View {
+        HStack {
+            TextField("Cerca applicazioni...", text: $searchText)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .frame(maxWidth: 300)
+            
+            Spacer()
+            
+            Text("💡 Click per aprire • Click destro per opzioni")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            Picker("Ordina per", selection: $sortOption) {
+                ForEach(SortOption.allCases, id: \.self) { option in
+                    Text(option.rawValue).tag(option)
+                }
             }
+            .frame(width: 150)
+            
+            Picker("Vista", selection: $viewMode) {
+                Image(systemName: "square.grid.2x2").tag(ViewMode.grid)
+                Image(systemName: "list.bullet").tag(ViewMode.list)
+            }
+            .pickerStyle(SegmentedPickerStyle())
         }
+        .padding()
+        .background(Color(NSColor.controlBackgroundColor))
+    }
+    
+    private var iconSizeSlider: some View {
+        HStack {
+            Text("Dimensione icone:")
+            Slider(value: $iconSize, in: 32...128, step: 8)
+                .frame(width: 150)
+            Text("\(Int(iconSize)) pt")
+                .frame(width: 50)
+        }
+        .padding(.horizontal)
     }
 }
+

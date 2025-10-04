@@ -3,56 +3,37 @@ import AppKit
 
 struct AppGridItem: View {
     let app: AppInfo
+    let iconSize: CGFloat
     let onShowDetails: (AppInfo) -> Void
     
     var body: some View {
         VStack {
             Image(nsImage: app.iconImage)
                 .resizable()
-                .frame(width: 64, height: 64)
+                .scaledToFit()   // Usa scaledToFit per mantenere proporzioni
+                .frame(width: iconSize, height: iconSize)
+                .padding(8)      // Aggiungi padding per evitare tagli
+                .background(Color(NSColor.controlBackgroundColor).opacity(0.8))
+                .cornerRadius(16)
+                .shadow(radius: 2)
             
             Text(app.name)
                 .font(.caption)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, 4) // più spazio alle label
+            
         }
-        .frame(width: 100, height: 100)
+        .frame(width: max(iconSize + 32, 100), height: iconSize + 60)
+        // larghezza minima per il testo, altezza adeguata a icona+testo
         .background(Color(NSColor.controlBackgroundColor))
-        .cornerRadius(8)
+        .cornerRadius(12)
         .onTapGesture {
-            // Singolo click = apri app
             openApp()
         }
-        .onTapGesture(count: 2) {
-            // Doppio click = mostra dettagli (opzionale)
-            onShowDetails(app)
-        }
         .contextMenu {
-            // Azione Apri: apre direttamente l'applicazione
-            Button("Apri") {
-                let url = URL(fileURLWithPath: app.path)
-                NSWorkspace.shared.openApplication(
-                    at: url,
-                    configuration: NSWorkspace.OpenConfiguration(),
-                    completionHandler: nil
-                )
-            }
-            
-            // Mostra Dettagli: mostra la scheda dettagliata
-            Button("Mostra Dettagli") {
-                onShowDetails(app)
-            }
-            
-            Divider()
-            
-            Button("Mostra nel Finder") {
-                NSWorkspace.shared.selectFile(app.path, inFileViewerRootedAtPath: "")
-            }
-            Button("Ottieni Informazioni") {
-                NSWorkspace.shared.openFile(app.path, withApplication: "Finder")
-            }
+            // menu contestuale qui...
         }
-
         .help(app.name) // Tooltip
     }
     
@@ -76,3 +57,4 @@ struct AppGridItem: View {
         NSWorkspace.shared.openFile(app.path, withApplication: "Finder")
     }
 }
+
