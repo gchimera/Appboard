@@ -41,6 +41,12 @@ struct WebLink: Identifiable, Codable, Hashable {
     static func == (lhs: WebLink, rhs: WebLink) -> Bool {
         lhs.id == rhs.id
     }
+    
+    func withUpdatedCategory(_ newCategory: String?) -> WebLink {
+        var updated = self
+        updated.categoryName = newCategory
+        return updated
+    }
 }
 
 // Extension for CloudKit sync

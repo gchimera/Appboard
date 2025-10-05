@@ -9,6 +9,9 @@ struct WebLinkGridItem: View {
     let isSelected: Bool
     let onToggleSelection: () -> Void
     let makeDragItemProvider: () -> NSItemProvider
+    var onDelete: ((WebLink) -> Void)? = nil
+    var onChangeCategory: ((WebLink, String) -> Void)? = nil
+    var availableCategories: [String] = []
     
     @State private var isHovered: Bool = false
     
@@ -122,8 +125,21 @@ struct WebLinkGridItem: View {
             
             Divider()
             
+            // Submenu per cambiare categoria
+            if !availableCategories.isEmpty, let onChangeCategory = onChangeCategory {
+                Menu("Sposta in Categoria") {
+                    ForEach(availableCategories.filter { $0 != "Tutte" }, id: \.self) { category in
+                        Button(category) {
+                            onChangeCategory(webLink, category)
+                        }
+                    }
+                }
+            }
+            
+            Divider()
+            
             Button("Elimina", role: .destructive) {
-                // This will be handled by parent view
+                onDelete?(webLink)
             }
         }
     }

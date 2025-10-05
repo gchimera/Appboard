@@ -152,16 +152,27 @@ struct ContentView: View {
                                         },
                                         makeDragItemProvider: {
                                             let provider = NSItemProvider()
-                                            provider.registerDataRepresentation(forTypeIdentifier: UTType.url.identifier, visibility: .all) { completion in
-                                                if let url = URL(string: webLink.url) {
-                                                    completion(url.dataRepresentation, nil)
-                                                } else {
-                                                    completion(nil, nil)
+                                            // Register WebLink as JSON for drag & drop to categories
+                                            if let data = try? JSONEncoder().encode(webLink) {
+                                                provider.registerDataRepresentation(forTypeIdentifier: "com.appboard.weblink", visibility: .all) { completion in
+                                                    completion(data, nil)
+                                                    return nil
                                                 }
-                                                return nil
+                                                provider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
+                                                    completion(data, nil)
+                                                    return nil
+                                                }
                                             }
                                             return provider
-                                        }
+                                        },
+                                        onDelete: { linkToDelete in
+                                            appManager.deleteWebLink(linkToDelete)
+                                        },
+                                        onChangeCategory: { link, newCategory in
+                                            let updatedLink = link.withUpdatedCategory(newCategory)
+                                            appManager.updateWebLink(updatedLink)
+                                        },
+                                        availableCategories: appManager.categories
                                     )
                                 }
                                 
@@ -408,8 +419,8 @@ struct CategoryDropRow: View {
         .onTapGesture {
             onSelect?()
         }
-        .onDrop(of: ["com.appboard.app-info", "com.appboard.app-info-list", UTType.json.identifier], isTargeted: $isDropTargeted) { providers in
-            handleAppDrop(providers: providers)
+        .onDrop(of: ["com.appboard.app-info", "com.appboard.app-info-list", "com.appboard.weblink", UTType.json.identifier], isTargeted: $isDropTargeted) { providers in
+            handleDrop(providers: providers)
         }
     }
     
@@ -427,36 +438,50 @@ struct CategoryDropRow: View {
         return isDropTargeted ? Color.accentColor : Color.clear
     }
     
-    private func handleAppDrop(providers: [NSItemProvider]) -> Bool {
+    private func handleDrop(providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
         
         // Non permettere drop nella categoria "Tutte"
         guard category != "Tutte" else { return false }
         
-        // Tenta prima il payload multiplo
-        provider.loadDataRepresentation(forTypeIdentifier: "com.appboard.app-info-list") { listData, _ in
-            if let listData = listData, let apps = try? JSONDecoder().decode([AppInfo].self, from: listData) {
-                handleDecodedArray(apps)
+        // Prova prima WebLink
+        provider.loadDataRepresentation(forTypeIdentifier: "com.appboard.weblink") { data, _ in
+            if let data = data, let webLink = try? JSONDecoder().decode(WebLink.self, from: data) {
+                self.handleDecodedWebLink(webLink)
                 return
             }
-            // Poi il payload singolo custom
-            provider.loadDataRepresentation(forTypeIdentifier: "com.appboard.app-info") { data, _ in
-                if let data = data, let app = try? JSONDecoder().decode(AppInfo.self, from: data) {
-                    handleDecoded(app)
+            // Poi prova AppInfo list
+            provider.loadDataRepresentation(forTypeIdentifier: "com.appboard.app-info-list") { listData, _ in
+                if let listData = listData, let apps = try? JSONDecoder().decode([AppInfo].self, from: listData) {
+                    self.handleDecodedArray(apps)
                     return
                 }
-                // Fallback JSON generico
-                provider.loadDataRepresentation(forTypeIdentifier: UTType.json.identifier) { jsonData, _ in
-                    if let jsonData = jsonData {
-                        if let apps = try? JSONDecoder().decode([AppInfo].self, from: jsonData) {
-                            handleDecodedArray(apps)
-                        } else if let app = try? JSONDecoder().decode(AppInfo.self, from: jsonData) {
-                            handleDecoded(app)
+                // Poi il payload singolo custom
+                provider.loadDataRepresentation(forTypeIdentifier: "com.appboard.app-info") { data, _ in
+                    if let data = data, let app = try? JSONDecoder().decode(AppInfo.self, from: data) {
+                        self.handleDecoded(app)
+                        return
+                    }
+                    // Fallback JSON generico - prova sia WebLink che AppInfo
+                    provider.loadDataRepresentation(forTypeIdentifier: UTType.json.identifier) { jsonData, _ in
+                        if let jsonData = jsonData {
+                            // Prova WebLink
+                            if let webLink = try? JSONDecoder().decode(WebLink.self, from: jsonData) {
+                                self.handleDecodedWebLink(webLink)
+                            }
+                            // Prova AppInfo array
+                            else if let apps = try? JSONDecoder().decode([AppInfo].self, from: jsonData) {
+                                self.handleDecodedArray(apps)
+                            }
+                            // Prova AppInfo singola
+                            else if let app = try? JSONDecoder().decode(AppInfo.self, from: jsonData) {
+                                self.handleDecoded(app)
+                            } else {
+                                self.handleDecoded(nil)
+                            }
                         } else {
-                            handleDecoded(nil)
+                            self.handleDecoded(nil)
                         }
-                    } else {
-                        handleDecoded(nil)
                     }
                 }
             }
@@ -488,6 +513,17 @@ struct CategoryDropRow: View {
                 appManager.assignAppToCategory(app: app, newCategory: category)
             }
             print("Assegnate \(uniqueApps.count) app alla categoria \(category) tramite drag-drop multiplo")
+        }
+    }
+    
+    private func handleDecodedWebLink(_ webLink: WebLink) {
+        DispatchQueue.main.async {
+            guard webLink.categoryName != category else { return }
+            
+            let updatedLink = webLink.withUpdatedCategory(category)
+            appManager.updateWebLink(updatedLink)
+            
+            print("WebLink \(webLink.name) assegnato alla categoria \(category) tramite drag-drop")
         }
     }
     
