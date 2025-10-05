@@ -206,7 +206,7 @@ struct SyncControlsSection: View {
                         case .syncing:
                             onShowToast?("Sincronizzazione in corso...", .info)
                         case .idle:
-                            onShowToast?("Sincronizzazione inattiva", .info)
+                            onShowToast?("Nessuna nuova modifica da sincronizzare", .info)
                         }
                     }
                 }) {
