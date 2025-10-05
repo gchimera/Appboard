@@ -11,7 +11,7 @@ struct ContentView: View {
     @State private var sortOption: SortOption = .name
     @State private var selectedApp: AppInfo? = nil
     @State private var selectedAppIDs: Set<UUID> = []
-    @State private var iconSize: CGFloat = 64
+    @AppStorage("iconSizePreference") private var iconSizePreference: Double = 64
     @State private var showSettings = false
     @State private var showCategoryManagement = false
     @State private var isGridSelectionMode = false
@@ -119,7 +119,7 @@ struct ContentView: View {
                                     let isSelected = selectedAppIDs.contains(app.id)
                                     AppGridItem(
                                         app: app,
-                                        iconSize: iconSize,
+                                        iconSize: CGFloat(iconSizePreference),
                                         onShowDetails: { selected in selectedApp = selected },
                                         selectionEnabled: isGridSelectionMode,
                                         isSelected: isSelected,
@@ -271,7 +271,10 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(
-                iconSize: $iconSize,
+                iconSize: Binding(
+                    get: { CGFloat(iconSizePreference) },
+                    set: { iconSizePreference = Double($0) }
+                ),
                 iconSizes: iconSizes,
                 iconSizeLabels: iconSizeLabels
             )
@@ -281,6 +284,7 @@ struct ContentView: View {
             CategoryManagementView(appManager: appManager)
         }
         .onAppear {
+            // Carica app (la dimensione icone è persistita via @AppStorage)
             appManager.loadInstalledApps()
 
             cancellable = notificationCenter.publisher(for: NSApplication.willBecomeActiveNotification)
