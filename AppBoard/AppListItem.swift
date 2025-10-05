@@ -46,27 +46,7 @@ struct AppListItem: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .contentShape(Rectangle())
-        .onTapGesture {
-            openApp()
-        }
-        .onDrag {
-            // Crea i dati per il drag
-            if let appData = try? JSONEncoder().encode(app) {
-                let itemProvider = NSItemProvider()
-                // Tipo custom dell'app
-                itemProvider.registerDataRepresentation(forTypeIdentifier: "com.appboard.app-info", visibility: .all) { completion in
-                    completion(appData, nil)
-                    return nil
-                }
-                // Fallback JSON pubblico per massima compatibilità hover
-                itemProvider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
-                    completion(appData, nil)
-                    return nil
-                }
-                return itemProvider
-            }
-            return NSItemProvider()
-        }
+        // In List, la selezione nativa gestisce il click; il doppio click è definito nel contenitore.
         .contextMenu {
             Button("Apri") {
                 openApp()

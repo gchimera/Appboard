@@ -5,6 +5,8 @@ struct SettingsView: View {
     let iconSizes: [CGFloat]
     let iconSizeLabels: [CGFloat: String]
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var appManager: AppManager
+    @State private var showResetAlert = false
 
     var body: some View {
         VStack(spacing: 20) {
@@ -34,6 +36,35 @@ struct SettingsView: View {
             
             Divider()
             
+            // Gestione Categorie
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Categorie")
+                    .font(.headline)
+                Text("Reimposta l'elenco delle categorie rimuovendo quelle aggiunte e riassegnando le app alle categorie iniziali.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Button(role: .destructive) {
+                    showResetAlert = true
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.counterclockwise.circle")
+                        Text("Reset Categorie")
+                    }
+                }
+                .help("Rimuove le categorie personalizzate e riassegna le app alle categorie iniziali")
+            }
+            .padding(.horizontal)
+            .alert("Reset Categorie", isPresented: $showResetAlert) {
+                Button("Annulla", role: .cancel) {}
+                Button("Conferma", role: .destructive) {
+                    appManager.resetCategoriesToDefaults()
+                }
+            } message: {
+                Text("Questa azione rimuoverà tutte le categorie aggiunte e riassegnerà le relative app alle categorie iniziali. L'operazione non può essere annullata.")
+            }
+            
+            Divider()
+            
             // Sync Settings
             SyncSettingsSection()
                 .padding(.horizontal)
@@ -45,7 +76,7 @@ struct SettingsView: View {
             }
             .padding()
         }
-        .frame(width: 450, height: 400)
+        .frame(width: 500, height: 520)
         .padding()
     }
 }

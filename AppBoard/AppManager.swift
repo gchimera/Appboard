@@ -462,6 +462,47 @@ class AppManager: ObservableObject {
         }
     }
     
+    func resetCategoriesToDefaults() {
+        // Rimuove tutte le categorie personalizzate e riassegna le app alle categorie iniziali
+        // Mantieni solo le categorie predefinite, preservando l'ordine corrente
+        categories = categories.filter { defaultCategories.contains($0) }
+
+        // Mantieni solo le icone personalizzate associate alle categorie predefinite
+        customCategoryIcons = customCategoryIcons.filter { defaultCategories.contains($0.key) }
+
+        var reassigned = 0
+        // Riassegna tutte le app alla categoria iniziale calcolata
+        for app in apps {
+            let newCat = defaultCategoryForApp(app)
+            if app.category != newCat {
+                assignAppToCategory(app: app, newCategory: newCat)
+                reassigned += 1
+            }
+        }
+
+        // Salva stato aggiornato
+        saveCustomCategories()
+        saveCustomCategoryIcons()
+        saveAppsCache()
+        print("Reset categorie completato. App riassegnate: \(reassigned)")
+    }
+
+    private func defaultCategoryForApp(_ app: AppInfo) -> String {
+        // Caso speciale: app di sistema nella cartella /System/Applications -> "Sistema"
+        if app.path.hasPrefix("/System/Applications/") {
+            return "Sistema"
+        }
+        // Calcola la categoria "iniziale" in base all'Info.plist o ricade su Heuristica
+        let infoPlistURL = URL(fileURLWithPath: app.path).appendingPathComponent("Contents/Info.plist")
+        var categoryType: String? = nil
+        if FileManager.default.fileExists(atPath: infoPlistURL.path), let plist = NSDictionary(contentsOf: infoPlistURL) {
+            categoryType = plist["LSApplicationCategoryType"] as? String
+        }
+        let mapped = determineCategory(from: categoryType, bundleId: app.bundleIdentifier, name: app.name)
+        // Se mapped non è una categoria predefinita, ricadi su Utilità
+        return defaultCategories.contains(mapped) ? mapped : "Utilità"
+    }
+
     func deleteCategory(_ categoryName: String) -> Bool {
         // Non permettere di eliminare categorie predefinite
         guard isCustomCategory(categoryName) else {

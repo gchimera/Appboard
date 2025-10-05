@@ -1,6 +1,7 @@
 import SwiftUI
 import Combine
 import UniformTypeIdentifiers
+import AppKit
 
 struct ContentView: View {
     @StateObject private var appManager = AppManager()
@@ -9,9 +10,11 @@ struct ContentView: View {
     @State private var viewMode: ViewMode = .grid
     @State private var sortOption: SortOption = .name
     @State private var selectedApp: AppInfo? = nil
+    @State private var selectedAppIDs: Set<UUID> = []
     @State private var iconSize: CGFloat = 64
     @State private var showSettings = false
     @State private var showCategoryManagement = false
+    @State private var isGridSelectionMode = false
     private var notificationCenter = NotificationCenter.default
     @State private var cancellable: AnyCancellable?
 
@@ -67,15 +70,13 @@ struct ContentView: View {
                     .font(.headline)
                     .padding()
 
-                List(appManager.categories, id: \.self) { category in
+                List(appManager.categories, id: \.self, selection: $selectedCategory) { category in
                     CategoryDropRow(
                         category: category,
                         appManager: appManager,
                         isSelected: category == selectedCategory
                     )
-                    .onTapGesture {
-                        selectedCategory = category
-                    }
+                    .tag(category)
                 }
                 .listStyle(SidebarListStyle())
 
@@ -95,6 +96,7 @@ struct ContentView: View {
                         viewMode: $viewMode,
                         sortOption: $sortOption,
                         showSettings: $showSettings,
+                        isGridSelectionMode: $isGridSelectionMode,
                         onReload: reloadApps
                     )
                     .environmentObject(appManager)
@@ -104,14 +106,58 @@ struct ContentView: View {
                         if viewMode == .grid {
                             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 20) {
                                 ForEach(filteredApps) { app in
-                                    AppGridItem(app: app, iconSize: iconSize) { selected in
-                                        selectedApp = selected
-                                    }
+                                    let isSelected = selectedAppIDs.contains(app.id)
+                                    AppGridItem(
+                                        app: app,
+                                        iconSize: iconSize,
+                                        onShowDetails: { selected in selectedApp = selected },
+                                        selectionEnabled: isGridSelectionMode,
+                                        isSelected: isSelected,
+                                        onToggleSelection: {
+                                            if isSelected {
+                                                selectedAppIDs.remove(app.id)
+                                            } else {
+                                                selectedAppIDs.insert(app.id)
+                                            }
+                                        },
+                                        makeDragItemProvider: {
+                                            // Costruisci payload in base alla selezione attiva
+                                            let selected: [AppInfo]
+                                            if isGridSelectionMode && selectedAppIDs.contains(app.id) && selectedAppIDs.count > 1 {
+                                                let set = selectedAppIDs
+                                                selected = filteredApps.filter { set.contains($0.id) }
+                                            } else {
+                                                selected = [app]
+                                            }
+                                            let provider = NSItemProvider()
+                                            if selected.count == 1, let data = try? JSONEncoder().encode(selected[0]) {
+                                                provider.registerDataRepresentation(forTypeIdentifier: "com.appboard.app-info", visibility: .all) { completion in
+                                                    completion(data, nil)
+                                                    return nil
+                                                }
+                                                provider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
+                                                    completion(data, nil)
+                                                    return nil
+                                                }
+                                            } else if let data = try? JSONEncoder().encode(selected) {
+                                                provider.registerDataRepresentation(forTypeIdentifier: "com.appboard.app-info-list", visibility: .all) { completion in
+                                                    completion(data, nil)
+                                                    return nil
+                                                }
+                                                provider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
+                                                    completion(data, nil)
+                                                    return nil
+                                                }
+                                            }
+                                            return provider
+                                        }
+                                    )
                                 }
                             }
                             .padding()
                         } else {
-                            VStack(spacing: 1) {
+                            VStack(spacing: 0) {
+                                // Header
                                 HStack(spacing: 12) {
                                     Text("Nome")
                                         .font(.caption)
@@ -139,13 +185,54 @@ struct ContentView: View {
                                 .padding(.vertical, 8)
                                 .background(Color.gray.opacity(0.1))
 
-                                LazyVStack(spacing: 0) {
+                                // Multi-selectable list of apps
+                                List(selection: $selectedAppIDs) {
                                     ForEach(filteredApps) { app in
                                         AppListItem(app: app) { selected in
                                             selectedApp = selected
                                         }
+                                        .tag(app.id)
+                                        .onTapGesture(count: 2) {
+                                            // Apri app al doppio click
+                                            let url = URL(fileURLWithPath: app.path)
+                                            NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
+                                        }
+                                        .onDrag {
+                                            // Se l'app è selezionata e ci sono più selezioni, trascina tutte le selezionate
+                                            let selected: [AppInfo]
+                                            if selectedAppIDs.contains(app.id) && selectedAppIDs.count > 1 {
+                                                let selectedSet = selectedAppIDs
+                                                selected = filteredApps.filter { selectedSet.contains($0.id) }
+                                            } else {
+                                                selected = [app]
+                                            }
+
+                                            // Encoda payload singolo o multiplo
+                                            let itemProvider = NSItemProvider()
+                                            if selected.count == 1, let data = try? JSONEncoder().encode(selected[0]) {
+                                                itemProvider.registerDataRepresentation(forTypeIdentifier: "com.appboard.app-info", visibility: .all) { completion in
+                                                    completion(data, nil)
+                                                    return nil
+                                                }
+                                                itemProvider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
+                                                    completion(data, nil)
+                                                    return nil
+                                                }
+                                            } else if let data = try? JSONEncoder().encode(selected) {
+                                                itemProvider.registerDataRepresentation(forTypeIdentifier: "com.appboard.app-info-list", visibility: .all) { completion in
+                                                    completion(data, nil)
+                                                    return nil
+                                                }
+                                                itemProvider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
+                                                    completion(data, nil)
+                                                    return nil
+                                                }
+                                            }
+                                            return itemProvider
+                                        }
                                     }
                                 }
+                                .listStyle(.inset)
                             }
                         }
                     }
@@ -195,6 +282,9 @@ struct ContentView: View {
         }
         .onDisappear {
             cancellable?.cancel()
+        }
+        .onChange(of: isGridSelectionMode) { isOn in
+            if !isOn { selectedAppIDs.removeAll() }
         }
         
     }
@@ -257,22 +347,33 @@ struct CategoryDropRow: View {
         // Non permettere drop nella categoria "Tutte"
         guard category != "Tutte" else { return false }
         
-        // Prova a leggere il nostro tipo custom, altrimenti fallback a JSON pubblico
-        provider.loadDataRepresentation(forTypeIdentifier: "com.appboard.app-info") { data, error in
-            var decoded: AppInfo? = nil
-            if let data = data {
-                decoded = try? JSONDecoder().decode(AppInfo.self, from: data)
-            } else {
-                // Tentativo fallback con JSON generico
-                provider.loadDataRepresentation(forTypeIdentifier: UTType.json.identifier) { jsonData, _ in
-                    if let jsonData = jsonData {
-                        decoded = try? JSONDecoder().decode(AppInfo.self, from: jsonData)
-                    }
-                    handleDecoded(decoded)
-                }
+        // Tenta prima il payload multiplo
+        provider.loadDataRepresentation(forTypeIdentifier: "com.appboard.app-info-list") { listData, _ in
+            if let listData = listData, let apps = try? JSONDecoder().decode([AppInfo].self, from: listData) {
+                handleDecodedArray(apps)
                 return
             }
-            handleDecoded(decoded)
+            // Poi il payload singolo custom
+            provider.loadDataRepresentation(forTypeIdentifier: "com.appboard.app-info") { data, _ in
+                if let data = data, let app = try? JSONDecoder().decode(AppInfo.self, from: data) {
+                    handleDecoded(app)
+                    return
+                }
+                // Fallback JSON generico
+                provider.loadDataRepresentation(forTypeIdentifier: UTType.json.identifier) { jsonData, _ in
+                    if let jsonData = jsonData {
+                        if let apps = try? JSONDecoder().decode([AppInfo].self, from: jsonData) {
+                            handleDecodedArray(apps)
+                        } else if let app = try? JSONDecoder().decode(AppInfo.self, from: jsonData) {
+                            handleDecoded(app)
+                        } else {
+                            handleDecoded(nil)
+                        }
+                    } else {
+                        handleDecoded(nil)
+                    }
+                }
+            }
         }
         
         return true
@@ -284,10 +385,23 @@ struct CategoryDropRow: View {
             return
         }
         DispatchQueue.main.async {
-            // Non fare nulla se l'app è già in questa categoria
             guard appInfo.category != category else { return }
             appManager.assignAppToCategory(app: appInfo, newCategory: category)
             print("App \\(appInfo.name) assegnata alla categoria \\(category) tramite drag-drop")
+        }
+    }
+
+    private func handleDecodedArray(_ apps: [AppInfo]?) {
+        guard let apps = apps, !apps.isEmpty else {
+            print("Impossibile decodificare la lista di app durante drop")
+            return
+        }
+        DispatchQueue.main.async {
+            let uniqueApps = Dictionary(grouping: apps, by: { $0.bundleIdentifier }).compactMap { $0.value.first }
+            for app in uniqueApps where app.category != category {
+                appManager.assignAppToCategory(app: app, newCategory: category)
+            }
+            print("Assegnate \(uniqueApps.count) app alla categoria \(category) tramite drag-drop multiplo")
         }
     }
     

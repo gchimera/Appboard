@@ -5,6 +5,7 @@ struct HeaderView: View {
     @Binding var viewMode: ContentView.ViewMode
     @Binding var sortOption: ContentView.SortOption
     @Binding var showSettings: Bool
+    @Binding var isGridSelectionMode: Bool
     let onReload: () -> Void
     
     var body: some View {
@@ -34,6 +35,19 @@ struct HeaderView: View {
             }
             .pickerStyle(SegmentedPickerStyle())
             .frame(width: 100)
+
+            if viewMode == .grid {
+                Button {
+                    isGridSelectionMode.toggle()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: isGridSelectionMode ? "checkmark.square.fill" : "checkmark.square")
+                        Text(isGridSelectionMode ? "Fine" : "Seleziona")
+                    }
+                }
+                .buttonStyle(.bordered)
+                .help(isGridSelectionMode ? "Termina selezione" : "Abilita selezione multipla nella griglia")
+            }
             
             // Sync indicator
             CompactSyncIndicator()
