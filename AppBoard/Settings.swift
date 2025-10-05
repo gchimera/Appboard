@@ -10,6 +10,9 @@ struct SettingsView: View {
     @State private var showToast = false
     @State private var toastMessage: String = ""
     @State private var toastStyle: ToastStyle = .success
+    @State private var openAIKey: String = UserDefaults.standard.string(forKey: "openai_api_key") ?? ""
+    @State private var isKeyVisible: Bool = false
+    @State private var isTesting: Bool = false
 
     var body: some View {
         VStack(spacing: 20) {
@@ -38,6 +41,90 @@ struct SettingsView: View {
                     .labelsHidden()
                     .pickerStyle(MenuPickerStyle())
                     .frame(minWidth: 200, alignment: .leading)
+                }
+            }
+            .padding(.horizontal)
+            
+            Divider()
+            
+            // AI Settings
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Intelligenza Artificiale")
+                    .font(.headline)
+                
+                Text("Configura la chiave API di OpenAI per generare automaticamente descrizioni dei siti web.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    if isKeyVisible {
+                        TextField("sk-...", text: $openAIKey)
+                            .textFieldStyle(.roundedBorder)
+                    } else {
+                        SecureField("sk-...", text: $openAIKey)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    
+                    Button {
+                        isKeyVisible.toggle()
+                    } label: {
+                        Image(systemName: isKeyVisible ? "eye.slash" : "eye")
+                    }
+                    .buttonStyle(.plain)
+                    .help(isKeyVisible ? "Nascondi chiave" : "Mostra chiave")
+                    
+                    Button("Salva") {
+                        UserDefaults.standard.set(openAIKey, forKey: "openai_api_key")
+                        toastMessage = "Chiave API salvata"
+                        toastStyle = .success
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+                            showToast = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                showToast = false
+                            }
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(openAIKey.isEmpty)
+                    
+                    Button {
+                        testConnection()
+                    } label: {
+                        HStack(spacing: 4) {
+                            if isTesting {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                            } else {
+                                Image(systemName: "network")
+                            }
+                            Text("Test")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(openAIKey.isEmpty || isTesting)
+                }
+                
+                HStack(spacing: 4) {
+                    Image(systemName: "info.circle")
+                        .font(.caption)
+                    Text("Ottieni una chiave API da")
+                        .font(.caption)
+                    Link("platform.openai.com", destination: URL(string: "https://platform.openai.com/api-keys")!)
+                        .font(.caption)
+                }
+                .foregroundColor(.secondary)
+                
+                if openAIKey.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .foregroundColor(.orange)
+                        Text("Senza chiave API, verranno generate descrizioni di fallback basate sull'URL.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 4)
                 }
             }
             .padding(.horizontal)
@@ -180,7 +267,7 @@ struct SettingsView: View {
             }
             .padding(.bottom)
         }
-        .frame(width: 550, height: 650)
+        .frame(width: 550, height: 780)
         .padding()
         .overlay(alignment: .bottom) {
             if showToast {
@@ -188,6 +275,47 @@ struct SettingsView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .padding(.bottom, 16)
                     .zIndex(1)
+            }
+        }
+    }
+    
+    private func testConnection() {
+        isTesting = true
+        
+        // Save the key temporarily to test
+        let previousKey = UserDefaults.standard.string(forKey: "openai_api_key")
+        UserDefaults.standard.set(openAIKey, forKey: "openai_api_key")
+        
+        Task {
+            let testDescription = await AIDescriptionService.shared.generateDescription(
+                for: "Test",
+                url: "https://github.com"
+            )
+            
+            await MainActor.run {
+                // Restore previous key if it was different
+                if let prev = previousKey, prev != openAIKey {
+                    UserDefaults.standard.set(prev, forKey: "openai_api_key")
+                }
+                
+                isTesting = false
+                
+                if let description = testDescription, description.contains("GitHub") || description.contains("Repository") {
+                    toastMessage = "✅ Connessione riuscita! API funzionante"
+                    toastStyle = .success
+                } else {
+                    toastMessage = "⚠️ Connessione funziona ma risposta inattesa"
+                    toastStyle = .info
+                }
+                
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+                    showToast = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        showToast = false
+                    }
+                }
             }
         }
     }

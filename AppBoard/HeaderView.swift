@@ -6,6 +6,7 @@ struct HeaderView: View {
     @Binding var sortOption: ContentView.SortOption
     @Binding var showSettings: Bool
     @Binding var isGridSelectionMode: Bool
+    @Binding var showAddWebLink: Bool
     let onReload: () -> Void
     
     var body: some View {
@@ -48,6 +49,17 @@ struct HeaderView: View {
                 .buttonStyle(.bordered)
                 .help(isGridSelectionMode ? "Termina selezione" : "Abilita selezione multipla nella griglia")
             }
+            
+            // Add WebLink button
+            Button {
+                showAddWebLink = true
+            } label: {
+                Image(systemName: "link.badge.plus")
+                    .imageScale(.large)
+                    .help("Aggiungi Sito Web")
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 8)
             
             // Sync indicator
             CompactSyncIndicator()

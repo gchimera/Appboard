@@ -10,10 +10,12 @@ struct ContentView: View {
     @State private var viewMode: ViewMode = .grid
     @State private var sortOption: SortOption = .name
     @State private var selectedApp: AppInfo? = nil
+    @State private var selectedWebLink: WebLink? = nil
     @State private var selectedAppIDs: Set<UUID> = []
     @AppStorage("iconSizePreference") private var iconSizePreference: Double = 64
     @State private var showSettings = false
     @State private var showCategoryManagement = false
+    @State private var showAddWebLink = false
     @State private var isGridSelectionMode = false
     private var notificationCenter = NotificationCenter.default
     @State private var cancellable: AnyCancellable?
@@ -62,6 +64,23 @@ struct ContentView: View {
 
         return apps
     }
+    
+    var filteredWebLinks: [WebLink] {
+        var links = appManager.webLinks
+
+        if selectedCategory != "Tutte" {
+            links = links.filter { $0.categoryName == selectedCategory }
+        }
+
+        if !searchText.isEmpty {
+            links = links.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+
+        // Sort by name for now (weblinks don't have size or lastUsed)
+        links.sort { $0.name < $1.name }
+
+        return links
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -107,6 +126,7 @@ struct ContentView: View {
                         sortOption: $sortOption,
                         showSettings: $showSettings,
                         isGridSelectionMode: $isGridSelectionMode,
+                        showAddWebLink: $showAddWebLink,
                         onReload: reloadApps
                     )
                     .environmentObject(appManager)
@@ -114,6 +134,38 @@ struct ContentView: View {
                     if viewMode == .grid {
                         ScrollView {
                             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 20) {
+                                // Web Links
+                                ForEach(filteredWebLinks) { webLink in
+                                    let isSelected = selectedAppIDs.contains(webLink.id)
+                                    WebLinkGridItem(
+                                        webLink: webLink,
+                                        iconSize: CGFloat(iconSizePreference),
+                                        onShowDetails: { selected in selectedWebLink = selected },
+                                        selectionEnabled: isGridSelectionMode,
+                                        isSelected: isSelected,
+                                        onToggleSelection: {
+                                            if isSelected {
+                                                selectedAppIDs.remove(webLink.id)
+                                            } else {
+                                                selectedAppIDs.insert(webLink.id)
+                                            }
+                                        },
+                                        makeDragItemProvider: {
+                                            let provider = NSItemProvider()
+                                            provider.registerDataRepresentation(forTypeIdentifier: UTType.url.identifier, visibility: .all) { completion in
+                                                if let url = URL(string: webLink.url) {
+                                                    completion(url.dataRepresentation, nil)
+                                                } else {
+                                                    completion(nil, nil)
+                                                }
+                                                return nil
+                                            }
+                                            return provider
+                                        }
+                                    )
+                                }
+                                
+                                // Apps
                                 ForEach(filteredApps) { app in
                                     let isSelected = selectedAppIDs.contains(app.id)
                                     AppGridItem(
@@ -246,7 +298,10 @@ struct ContentView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                     }
-                    FooterView(totalApps: appManager.apps.count, filteredCount: filteredApps.count)
+                    FooterView(
+                        totalApps: appManager.apps.count + appManager.webLinks.count,
+                        filteredCount: filteredApps.count + filteredWebLinks.count
+                    )
                 }
                 .blur(radius: appManager.isLoading ? 3 : 0) // Applica un effetto blur durante il caricamento
 
@@ -282,6 +337,14 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showCategoryManagement) {
             CategoryManagementView(appManager: appManager)
+        }
+        .sheet(isPresented: $showAddWebLink) {
+            AddWebLinkView()
+                .environmentObject(appManager)
+        }
+        .sheet(item: $selectedWebLink) { webLink in
+            WebLinkDetailView(webLink: webLink)
+                .environmentObject(appManager)
         }
         .onAppear {
             // Carica app (la dimensione icone è persistita via @AppStorage)

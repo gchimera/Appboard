@@ -5,6 +5,7 @@ import Combine
 @MainActor
 class AppManager: ObservableObject {
     @Published var apps: [AppInfo] = []
+    @Published var webLinks: [WebLink] = []
     @Published var categories: [String] = ["Tutte", "Sistema", "Produttività", "Creatività", "Sviluppo", "Giochi", "Social", "Utilità", "Educazione", "Sicurezza", "Multimedia", "Comunicazione", "Finanza", "Salute", "News"]
     @Published var isLoading = false
     var isLoaded = false
@@ -23,6 +24,7 @@ class AppManager: ObservableObject {
     
     init() {
         loadCustomCategories()
+        loadWebLinks()
         setupCloudKitNotifications()
     }
 
@@ -314,9 +316,49 @@ class AppManager: ObservableObject {
 
     func countForCategory(_ category: String) -> Int {
         if category == "Tutte" {
-            return apps.count
+            return apps.count + webLinks.count
         }
-        return apps.filter { $0.category == category }.count
+        let appCount = apps.filter { $0.category == category }.count
+        let linkCount = webLinks.filter { $0.categoryName == category }.count
+        return appCount + linkCount
+    }
+    
+    // MARK: - WebLink Management
+    
+    func addWebLink(_ webLink: WebLink) {
+        webLinks.append(webLink)
+        saveWebLinks()
+        
+        // Sync with CloudKit if enabled
+        if let categoryName = webLink.categoryName, !categories.contains(categoryName) {
+            addCustomCategory(categoryName)
+        }
+        
+        // TODO: Add CloudKit sync for weblinks when ready
+        print("WebLink aggiunto: \(webLink.name)")
+    }
+    
+    func updateWebLink(_ webLink: WebLink) {
+        guard let index = webLinks.firstIndex(where: { $0.id == webLink.id }) else {
+            print("WebLink non trovato per l'aggiornamento")
+            return
+        }
+        webLinks[index] = webLink
+        saveWebLinks()
+        print("WebLink aggiornato: \(webLink.name)")
+    }
+    
+    func deleteWebLink(_ webLink: WebLink) {
+        webLinks.removeAll { $0.id == webLink.id }
+        saveWebLinks()
+        print("WebLink eliminato: \(webLink.name)")
+    }
+    
+    func webLinksForCategory(_ category: String) -> [WebLink] {
+        if category == "Tutte" {
+            return webLinks
+        }
+        return webLinks.filter { $0.categoryName == category }
     }
     
     // MARK: Cache Storage
@@ -351,6 +393,32 @@ class AppManager: ObservableObject {
     func clearCache() {
         UserDefaults.standard.removeObject(forKey: "cachedApps")
         isLoaded = false
+    }
+    
+    private func saveWebLinks() {
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(webLinks)
+            UserDefaults.standard.set(data, forKey: "savedWebLinks")
+            print("WebLinks salvati: \(webLinks.count)")
+        } catch {
+            print("Errore nel salvataggio WebLinks: \(error)")
+        }
+    }
+    
+    private func loadWebLinks() {
+        if let data = UserDefaults.standard.data(forKey: "savedWebLinks") {
+            do {
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let loadedLinks = try decoder.decode([WebLink].self, from: data)
+                self.webLinks = loadedLinks
+                print("WebLinks caricati: \(loadedLinks.count)")
+            } catch {
+                print("Errore nel caricamento WebLinks: \(error)")
+            }
+        }
     }
     
     // MARK: Category Management
