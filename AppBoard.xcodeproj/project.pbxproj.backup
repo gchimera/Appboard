@@ -6,6 +6,20 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D284650C2E91590000A221F6 /* LoginItem.app in Embed Login Items */ = {isa = PBXBuildFile; fileRef = D284650A2E91590000A221F6 /* LoginItem.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D284651E2E91590000A221F6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D28463F12E9158E400A221F6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D28465092E91590000A221F6;
+			remoteInfo = LoginItem;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		D28465032E91590000A221F6 /* Embed Login Items */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -13,6 +27,7 @@
 			dstPath = Contents/Library/LoginItems;
 			dstSubfolderSpec = 1;
 			files = (
+				D284650C2E91590000A221F6 /* LoginItem.app in Embed Login Items */,
 			);
 			name = "Embed Login Items";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -21,6 +36,7 @@
 
 /* Begin PBXFileReference section */
 		D28463F92E9158E400A221F6 /* AppBoard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D284650A2E91590000A221F6 /* LoginItem.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LoginItem.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -44,6 +60,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D28465072E91590000A221F6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -60,6 +83,7 @@
 			isa = PBXGroup;
 			children = (
 				D28463F92E9158E400A221F6 /* AppBoard.app */,
+				D284650A2E91590000A221F6 /* LoginItem.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -79,6 +103,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				D284650D2E91590000A221F6 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D28463FB2E9158E400A221F6 /* AppBoard */,
@@ -88,6 +113,28 @@
 			);
 			productName = AppBoard;
 			productReference = D28463F92E9158E400A221F6 /* AppBoard.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D28465092E91590000A221F6 /* LoginItem */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D284650E2E91590000A221F6 /* Build configuration list for PBXNativeTarget "LoginItem" */;
+			buildPhases = (
+				D28465062E91590000A221F6 /* Sources */,
+				D28465072E91590000A221F6 /* Frameworks */,
+				D28465082E91590000A221F6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D284650B2E91590000A221F6 /* LoginItemHelper */,
+			);
+			name = LoginItem;
+			packageProductDependencies = (
+			);
+			productName = LoginItem;
+			productReference = D284650A2E91590000A221F6 /* LoginItem.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -101,6 +148,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					D28463F82E9158E400A221F6 = {
+						CreatedOnToolsVersion = 26.0.1;
+					};
+					D28465092E91590000A221F6 = {
 						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
@@ -120,12 +170,20 @@
 			projectRoot = "";
 			targets = (
 				D28463F82E9158E400A221F6 /* AppBoard */,
+				D28465092E91590000A221F6 /* LoginItem */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		D28463F72E9158E400A221F6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D28465082E91590000A221F6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -142,7 +200,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D28465062E91590000A221F6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D284650D2E91590000A221F6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D28465092E91590000A221F6 /* LoginItem */;
+			targetProxy = D284651E2E91590000A221F6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		D28464022E9158E500A221F6 /* Debug */ = {
@@ -345,6 +418,58 @@
 			};
 			name = Release;
 		};
+		D284650F2E91590000A221F6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LoginItemHelper/LoginItem.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = PN2T5H7675;
+				INFOPLIST_FILE = LoginItemHelper/Info.plist;
+				INFOPLIST_KEY_LSBackgroundOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.appboard.mac.LoginItem;
+				PRODUCT_NAME = LoginItem;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D28465102E91590000A221F6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = LoginItemHelper/LoginItem.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "3rd Party Mac Developer Application";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = PN2T5H7675;
+				INFOPLIST_FILE = LoginItemHelper/Info.plist;
+				INFOPLIST_KEY_LSBackgroundOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.appboard.mac.LoginItem;
+				PRODUCT_NAME = LoginItem;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "Appboard Login DIST";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -362,6 +487,15 @@
 			buildConfigurations = (
 				D28464052E9158E500A221F6 /* Debug */,
 				D28464062E9158E500A221F6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D284650E2E91590000A221F6 /* Build configuration list for PBXNativeTarget "LoginItem" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D284650F2E91590000A221F6 /* Debug */,
+				D28465102E91590000A221F6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

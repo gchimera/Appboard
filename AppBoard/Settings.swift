@@ -11,10 +11,6 @@ struct SettingsView: View {
     @State private var toastMessage: String = ""
     @State private var toastStyle: ToastStyle = .success
 
-    // Avvio al login
-    @State private var launchAtLoginEnabled: Bool = false
-    @State private var isProcessingLaunchAtLogin: Bool = false
-
     var body: some View {
         VStack(spacing: 20) {
             Text("Impostazioni")
@@ -48,34 +44,81 @@ struct SettingsView: View {
             
             Divider()
             
-            // Avvio al login
-            if #available(macOS 13.0, *) {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Avvio")
-                        .font(.headline)
-                    
-                    HStack {
-                        Toggle("Avvia al login", isOn: $launchAtLoginEnabled)
-                            .disabled(isProcessingLaunchAtLogin)
-                        
-                        if isProcessingLaunchAtLogin {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .padding(.leading, 8)
+            // Tutorial Avvio Automatico
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Avvio Automatico")
+                    .font(.headline)
+                
+                Text("Per far avviare AppBoard automaticamente al login:")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("1.")
+                            .foregroundColor(.accentColor)
+                            .fontWeight(.semibold)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Apri Impostazioni di Sistema")
+                                .fontWeight(.medium)
+                            Text("Menu Apple () > Impostazioni di Sistema")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                     }
                     
-                    Text("Avvia automaticamente AppBoard all'accesso al sistema")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal)
-                .onChange(of: launchAtLoginEnabled) { newValue in
-                    Task {
-                        await setLaunchAtLogin(enabled: newValue)
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("2.")
+                            .foregroundColor(.accentColor)
+                            .fontWeight(.semibold)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Vai in Generali > Elementi login")
+                                .fontWeight(.medium)
+                            Text("Oppure cerca \"Elementi login\" nella barra di ricerca")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("3.")
+                            .foregroundColor(.accentColor)
+                            .fontWeight(.semibold)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Clicca il pulsante \"+\" sotto \"Apri al login\"")
+                                .fontWeight(.medium)
+                        }
+                    }
+                    
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("4.")
+                            .foregroundColor(.accentColor)
+                            .fontWeight(.semibold)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Seleziona AppBoard dalla lista")
+                                .fontWeight(.medium)
+                            Text("Di solito si trova in Applicazioni")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
+                .padding(.leading, 4)
+                
+                Button(action: {
+                    // Open System Settings > Login Items
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "gear")
+                        Text("Apri Impostazioni di Sistema")
+                    }
+                }
+                .buttonStyle(.borderedProminent)
             }
+            .padding(.horizontal)
             
             Divider()
             
@@ -117,12 +160,27 @@ struct SettingsView: View {
             
             Spacer()
             
+            // Version info
+            VStack(spacing: 4) {
+                if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+                   let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+                    Text("AppBoard versione \(version) (\(build))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("AppBoard versione 1.0")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(.bottom, 8)
+            
             Button("Chiudi") {
                 dismiss()
             }
-            .padding()
+            .padding(.bottom)
         }
-        .frame(width: 500, height: 520)
+        .frame(width: 550, height: 650)
         .padding()
         .overlay(alignment: .bottom) {
             if showToast {
@@ -130,78 +188,6 @@ struct SettingsView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .padding(.bottom, 16)
                     .zIndex(1)
-            }
-        }
-        .onAppear {
-            if #available(macOS 13.0, *) {
-                Task {
-                    await refreshLaunchAtLoginState()
-                }
-            }
-        }
-    }
-    
-    // MARK: - Launch at Login Helpers
-    @available(macOS 13.0, *)
-    @MainActor
-    private func refreshLaunchAtLoginState() async {
-        launchAtLoginEnabled = LoginItemManager.isEnabled()
-    }
-    
-    @available(macOS 13.0, *)
-    @MainActor
-    private func setLaunchAtLogin(enabled: Bool) async {
-        isProcessingLaunchAtLogin = true
-        defer { isProcessingLaunchAtLogin = false }
-        
-        do {
-            let status = try LoginItemManager.setEnabledReturningStatus(enabled)
-            
-            switch status {
-            case .enabled:
-                toastMessage = "Avvio al login attivato"
-                toastStyle = .success
-                launchAtLoginEnabled = true
-            case .disabled:
-                toastMessage = "Avvio al login disattivato"
-                toastStyle = .success
-                launchAtLoginEnabled = false
-            case .requiresApproval:
-                toastMessage = "Richiesta approvazione nelle Impostazioni di Sistema"
-                toastStyle = .info
-                launchAtLoginEnabled = false
-                // Open system preferences after a short delay
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    LoginItemManager.openLoginItemsPreferences()
-                }
-            case .notFound:
-                toastMessage = "Errore: Helper non trovato"
-                toastStyle = .error
-                launchAtLoginEnabled = false
-            }
-            
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
-                showToast = true
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    showToast = false
-                }
-            }
-        } catch {
-            toastMessage = "Errore: \(error.localizedDescription)"
-            toastStyle = .error
-            launchAtLoginEnabled = false
-            
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
-                showToast = true
-            }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    showToast = false
-                }
             }
         }
     }
