@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 struct AppGridItem: View {
     let app: AppInfo
@@ -28,6 +29,24 @@ struct AppGridItem: View {
         .cornerRadius(12)
         .onTapGesture {
             openApp()
+        }
+        .onDrag {
+            // Crea i dati per il drag
+            if let appData = try? JSONEncoder().encode(app) {
+                let itemProvider = NSItemProvider()
+                // Tipo custom dell'app
+                itemProvider.registerDataRepresentation(forTypeIdentifier: "com.appboard.app-info", visibility: .all) { completion in
+                    completion(appData, nil)
+                    return nil
+                }
+                // Fallback JSON pubblico per massima compatibilità hover
+                itemProvider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
+                    completion(appData, nil)
+                    return nil
+                }
+                return itemProvider
+            }
+            return NSItemProvider()
         }
         .contextMenu {
             Button("Apri") {

@@ -18,10 +18,10 @@ struct FooterView: View {
             
             Spacer()
             
-            // Informazioni aggiuntive opzionali
-            Text("App Organizer v1.0")
+            Text("Trascina le app nelle categorie a sinistra per assegnarle")
                 .font(.caption2)
                 .foregroundColor(.secondary)
+                .italic()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)

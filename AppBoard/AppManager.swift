@@ -442,6 +442,26 @@ class AppManager: ObservableObject {
         return true
     }
     
+    func assignAppToCategory(app: AppInfo, newCategory: String) {
+        // Trova l'app nell'array e aggiorna la sua categoria
+        if let index = apps.firstIndex(where: { $0.id == app.id }) {
+            apps[index] = apps[index].withUpdatedCategory(newCategory)
+            saveAppsCache()
+            
+            // Crea operazione CloudKit pendente per la sincronizzazione
+            if cloudKitManager.syncEnabled {
+                let appData = SyncableAppData(
+                    bundleIdentifier: app.bundleIdentifier,
+                    assignedCategory: newCategory
+                )
+                let operation = CloudKitOperation(type: .saveAppAssignment, appData: appData)
+                cloudKitManager.addPendingOperation(operation)
+            }
+            
+            print("App \(app.name) assegnata alla categoria \(newCategory)")
+        }
+    }
+    
     func deleteCategory(_ categoryName: String) -> Bool {
         // Non permettere di eliminare categorie predefinite
         guard isCustomCategory(categoryName) else {

@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @StateObject private var appManager = AppManager()
@@ -66,15 +67,15 @@ struct ContentView: View {
                     .font(.headline)
                     .padding()
 
-                List(appManager.categories, id: \.self, selection: $selectedCategory) { category in
-                    HStack {
-                        CategoryIconView(category: category, size: 18, appManager: appManager)
-                        Text(category)
-                        Spacer()
-                        Text("\(appManager.countForCategory(category))")
-                            .foregroundColor(.secondary)
+                List(appManager.categories, id: \.self) { category in
+                    CategoryDropRow(
+                        category: category,
+                        appManager: appManager,
+                        isSelected: category == selectedCategory
+                    )
+                    .onTapGesture {
+                        selectedCategory = category
                     }
-                    .padding(.vertical, 2)
                 }
                 .listStyle(SidebarListStyle())
 
@@ -203,4 +204,91 @@ struct ContentView: View {
         appManager.loadInstalledApps()
     }
 
+}
+
+struct CategoryDropRow: View {
+    let category: String
+    @ObservedObject var appManager: AppManager
+    let isSelected: Bool
+    @State private var isDropTargeted = false
+    
+    var body: some View {
+        HStack {
+            CategoryIconView(category: category, size: 18, appManager: appManager)
+            Text(category)
+                .fontWeight(isSelected ? .semibold : .regular)
+            Spacer()
+            Text("\(appManager.countForCategory(category))")
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .padding(.vertical, 2)
+        .padding(.horizontal, 8)
+        .listRowBackground(dropBackgroundColor)
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(dropBorderColor, lineWidth: isDropTargeted ? 2 : 0)
+        )
+        .scaleEffect(isDropTargeted ? 1.02 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isDropTargeted)
+        .onDrop(of: ["com.appboard.app-info", UTType.json.identifier], isTargeted: $isDropTargeted) { providers in
+            handleAppDrop(providers: providers)
+        }
+    }
+    
+    private var dropBackgroundColor: Color {
+        if isDropTargeted {
+            return Color.accentColor.opacity(0.15)
+        } else if isSelected {
+            return Color.accentColor.opacity(0.1)
+        } else {
+            return Color.clear
+        }
+    }
+    
+    private var dropBorderColor: Color {
+        return isDropTargeted ? Color.accentColor : Color.clear
+    }
+    
+    private func handleAppDrop(providers: [NSItemProvider]) -> Bool {
+        guard let provider = providers.first else { return false }
+        
+        // Non permettere drop nella categoria "Tutte"
+        guard category != "Tutte" else { return false }
+        
+        // Prova a leggere il nostro tipo custom, altrimenti fallback a JSON pubblico
+        provider.loadDataRepresentation(forTypeIdentifier: "com.appboard.app-info") { data, error in
+            var decoded: AppInfo? = nil
+            if let data = data {
+                decoded = try? JSONDecoder().decode(AppInfo.self, from: data)
+            } else {
+                // Tentativo fallback con JSON generico
+                provider.loadDataRepresentation(forTypeIdentifier: UTType.json.identifier) { jsonData, _ in
+                    if let jsonData = jsonData {
+                        decoded = try? JSONDecoder().decode(AppInfo.self, from: jsonData)
+                    }
+                    handleDecoded(decoded)
+                }
+                return
+            }
+            handleDecoded(decoded)
+        }
+        
+        return true
+    }
+    
+    private func handleDecoded(_ appInfo: AppInfo?) {
+        guard let appInfo = appInfo else {
+            print("Impossibile decodificare i dati dell'app durante drop")
+            return
+        }
+        DispatchQueue.main.async {
+            // Non fare nulla se l'app è già in questa categoria
+            guard appInfo.category != category else { return }
+            appManager.assignAppToCategory(app: appInfo, newCategory: category)
+            print("App \\(appInfo.name) assegnata alla categoria \\(category) tramite drag-drop")
+        }
+    }
+    
 }
