@@ -13,6 +13,7 @@ struct SettingsView: View {
 
     // Avvio al login
     @State private var launchAtLoginEnabled: Bool = false
+    @State private var isProcessingLaunchAtLogin: Bool = false
 
     var body: some View {
         VStack(spacing: 20) {
@@ -47,34 +48,34 @@ struct SettingsView: View {
             
             Divider()
             
-            // Avvio
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Avvio")
-                    .font(.headline)
-                Toggle("Avvia al login", isOn: $launchAtLoginEnabled)
-                    .onChange(of: launchAtLoginEnabled) { newValue in
-                        do {
-                            try LoginItemManager.setEnabled(newValue)
-                            toastMessage = newValue ? "Avvio al login abilitato" : "Avvio al login disabilitato"
-                            toastStyle = .success
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) { showToast = true }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                withAnimation(.easeInOut(duration: 0.25)) { showToast = false }
-                            }
-                        } catch {
-                            toastMessage = "Impossibile aggiornare l'impostazione: \(error.localizedDescription)"
-                            toastStyle = .error
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) { showToast = true }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                                withAnimation(.easeInOut(duration: 0.25)) { showToast = false }
-                            }
-                            // Ripristina stato coerente
-                            launchAtLoginEnabled = LoginItemManager.isEnabled()
+            // Avvio al login
+            if #available(macOS 13.0, *) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Avvio")
+                        .font(.headline)
+                    
+                    HStack {
+                        Toggle("Avvia al login", isOn: $launchAtLoginEnabled)
+                            .disabled(isProcessingLaunchAtLogin)
+                        
+                        if isProcessingLaunchAtLogin {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .padding(.leading, 8)
                         }
                     }
-                    .help("Esegue automaticamente AppBoard all'avvio del sistema")
+                    
+                    Text("Avvia automaticamente AppBoard all'accesso al sistema")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal)
+                .onChange(of: launchAtLoginEnabled) { newValue in
+                    Task {
+                        await setLaunchAtLogin(enabled: newValue)
+                    }
+                }
             }
-            .padding(.horizontal)
             
             Divider()
             
@@ -132,8 +133,76 @@ struct SettingsView: View {
             }
         }
         .onAppear {
-            // Sync stato toggla avvio al login
-            launchAtLoginEnabled = LoginItemManager.isEnabled()
+            if #available(macOS 13.0, *) {
+                Task {
+                    await refreshLaunchAtLoginState()
+                }
+            }
+        }
+    }
+    
+    // MARK: - Launch at Login Helpers
+    @available(macOS 13.0, *)
+    @MainActor
+    private func refreshLaunchAtLoginState() async {
+        launchAtLoginEnabled = LoginItemManager.isEnabled()
+    }
+    
+    @available(macOS 13.0, *)
+    @MainActor
+    private func setLaunchAtLogin(enabled: Bool) async {
+        isProcessingLaunchAtLogin = true
+        defer { isProcessingLaunchAtLogin = false }
+        
+        do {
+            let status = try LoginItemManager.setEnabledReturningStatus(enabled)
+            
+            switch status {
+            case .enabled:
+                toastMessage = "Avvio al login attivato"
+                toastStyle = .success
+                launchAtLoginEnabled = true
+            case .disabled:
+                toastMessage = "Avvio al login disattivato"
+                toastStyle = .success
+                launchAtLoginEnabled = false
+            case .requiresApproval:
+                toastMessage = "Richiesta approvazione nelle Impostazioni di Sistema"
+                toastStyle = .info
+                launchAtLoginEnabled = false
+                // Open system preferences after a short delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    LoginItemManager.openLoginItemsPreferences()
+                }
+            case .notFound:
+                toastMessage = "Errore: Helper non trovato"
+                toastStyle = .error
+                launchAtLoginEnabled = false
+            }
+            
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+                showToast = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    showToast = false
+                }
+            }
+        } catch {
+            toastMessage = "Errore: \(error.localizedDescription)"
+            toastStyle = .error
+            launchAtLoginEnabled = false
+            
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+                showToast = true
+            }
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    showToast = false
+                }
+            }
         }
     }
 }
