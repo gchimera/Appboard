@@ -9,6 +9,10 @@ struct SettingsView: View {
     @State private var showResetAlert = false
     @State private var showToast = false
     @State private var toastMessage: String = ""
+    @State private var toastStyle: ToastStyle = .success
+
+    // Avvio al login
+    @State private var launchAtLoginEnabled: Bool = false
 
     var body: some View {
         VStack(spacing: 20) {
@@ -28,7 +32,7 @@ struct SettingsView: View {
                     Spacer()
                     Picker(selection: $iconSize) {
                         ForEach(iconSizes, id: \.self) { size in
-                            Text(iconSizeLabels[size] ?? "\\(Int(size)) pt")
+                            Text(iconSizeLabels[size] ?? "\(Int(size)) pt")
                                 .tag(size)
                         }
                     } label: {
@@ -38,6 +42,37 @@ struct SettingsView: View {
                     .pickerStyle(MenuPickerStyle())
                     .frame(minWidth: 200, alignment: .leading)
                 }
+            }
+            .padding(.horizontal)
+            
+            Divider()
+            
+            // Avvio
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Avvio")
+                    .font(.headline)
+                Toggle("Avvia al login", isOn: $launchAtLoginEnabled)
+                    .onChange(of: launchAtLoginEnabled) { newValue in
+                        do {
+                            try LoginItemManager.setEnabled(newValue)
+                            toastMessage = newValue ? "Avvio al login abilitato" : "Avvio al login disabilitato"
+                            toastStyle = .success
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) { showToast = true }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                withAnimation(.easeInOut(duration: 0.25)) { showToast = false }
+                            }
+                        } catch {
+                            toastMessage = "Impossibile aggiornare l'impostazione: \(error.localizedDescription)"
+                            toastStyle = .error
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) { showToast = true }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                withAnimation(.easeInOut(duration: 0.25)) { showToast = false }
+                            }
+                            // Ripristina stato coerente
+                            launchAtLoginEnabled = LoginItemManager.isEnabled()
+                        }
+                    }
+                    .help("Esegue automaticamente AppBoard all'avvio del sistema")
             }
             .padding(.horizontal)
             
@@ -90,11 +125,15 @@ struct SettingsView: View {
         .padding()
         .overlay(alignment: .bottom) {
             if showToast {
-                ToastView(message: toastMessage)
+                ToastView(message: toastMessage, style: toastStyle)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .padding(.bottom, 16)
                     .zIndex(1)
             }
+        }
+        .onAppear {
+            // Sync stato toggla avvio al login
+            launchAtLoginEnabled = LoginItemManager.isEnabled()
         }
     }
 }
