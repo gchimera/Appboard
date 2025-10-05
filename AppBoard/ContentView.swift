@@ -111,9 +111,8 @@ struct ContentView: View {
                     )
                     .environmentObject(appManager)
 
-                    // Questo è il blocco che ho erroneamente rimosso
-                    ScrollView {
-                        if viewMode == .grid {
+                    if viewMode == .grid {
+                        ScrollView {
                             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 20) {
                                 ForEach(filteredApps) { app in
                                     let isSelected = selectedAppIDs.contains(app.id)
@@ -165,85 +164,86 @@ struct ContentView: View {
                                 }
                             }
                             .padding()
-                        } else {
-                            VStack(spacing: 0) {
-                                // Header
-                                HStack(spacing: 12) {
-                                    Text("Nome")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .frame(width: 200, alignment: .leading)
-                                    Spacer()
-                                    Text("Categoria")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .frame(width: 100, alignment: .trailing)
-                                    Text("Versione")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .frame(width: 60, alignment: .trailing)
-                                    Text("Dimensione")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .frame(width: 80, alignment: .trailing)
-                                    Text("Ultimo Uso")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                        .frame(width: 100, alignment: .trailing)
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(Color.gray.opacity(0.1))
+                        }
+                    } else {
+                        VStack(spacing: 0) {
+                            // Header
+                            HStack(spacing: 12) {
+                                Text("Nome")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .frame(width: 200, alignment: .leading)
+                                Spacer()
+                                Text("Categoria")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .frame(width: 100, alignment: .trailing)
+                                Text("Versione")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .frame(width: 60, alignment: .trailing)
+                                Text("Dimensione")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .frame(width: 80, alignment: .trailing)
+                                Text("Ultimo Uso")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .frame(width: 100, alignment: .trailing)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.gray.opacity(0.1))
 
-                                // Multi-selectable list of apps
-                                List(selection: $selectedAppIDs) {
-                                    ForEach(filteredApps) { app in
-                                        AppListItem(app: app) { selected in
-                                            selectedApp = selected
+                            // Multi-selectable list of apps
+                            List(selection: $selectedAppIDs) {
+                                ForEach(filteredApps) { app in
+                                    AppListItem(app: app) { selected in
+                                        selectedApp = selected
+                                    }
+                                    .tag(app.id)
+                                    .onTapGesture(count: 2) {
+                                        // Apri app al doppio click
+                                        let url = URL(fileURLWithPath: app.path)
+                                        NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
+                                    }
+                                    .onDrag {
+                                        // Se l'app è selezionata e ci sono più selezioni, trascina tutte le selezionate
+                                        let selected: [AppInfo]
+                                        if selectedAppIDs.contains(app.id) && selectedAppIDs.count > 1 {
+                                            let selectedSet = selectedAppIDs
+                                            selected = filteredApps.filter { selectedSet.contains($0.id) }
+                                        } else {
+                                            selected = [app]
                                         }
-                                        .tag(app.id)
-                                        .onTapGesture(count: 2) {
-                                            // Apri app al doppio click
-                                            let url = URL(fileURLWithPath: app.path)
-                                            NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
-                                        }
-                                        .onDrag {
-                                            // Se l'app è selezionata e ci sono più selezioni, trascina tutte le selezionate
-                                            let selected: [AppInfo]
-                                            if selectedAppIDs.contains(app.id) && selectedAppIDs.count > 1 {
-                                                let selectedSet = selectedAppIDs
-                                                selected = filteredApps.filter { selectedSet.contains($0.id) }
-                                            } else {
-                                                selected = [app]
-                                            }
 
-                                            // Encoda payload singolo o multiplo
-                                            let itemProvider = NSItemProvider()
-                                            if selected.count == 1, let data = try? JSONEncoder().encode(selected[0]) {
-                                                itemProvider.registerDataRepresentation(forTypeIdentifier: "com.appboard.app-info", visibility: .all) { completion in
-                                                    completion(data, nil)
-                                                    return nil
-                                                }
-                                                itemProvider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
-                                                    completion(data, nil)
-                                                    return nil
-                                                }
-                                            } else if let data = try? JSONEncoder().encode(selected) {
-                                                itemProvider.registerDataRepresentation(forTypeIdentifier: "com.appboard.app-info-list", visibility: .all) { completion in
-                                                    completion(data, nil)
-                                                    return nil
-                                                }
-                                                itemProvider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
-                                                    completion(data, nil)
-                                                    return nil
-                                                }
+                                        // Encoda payload singolo o multiplo
+                                        let itemProvider = NSItemProvider()
+                                        if selected.count == 1, let data = try? JSONEncoder().encode(selected[0]) {
+                                            itemProvider.registerDataRepresentation(forTypeIdentifier: "com.appboard.app-info", visibility: .all) { completion in
+                                                completion(data, nil)
+                                                return nil
                                             }
-                                            return itemProvider
+                                            itemProvider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
+                                                completion(data, nil)
+                                                return nil
+                                            }
+                                        } else if let data = try? JSONEncoder().encode(selected) {
+                                            itemProvider.registerDataRepresentation(forTypeIdentifier: "com.appboard.app-info-list", visibility: .all) { completion in
+                                                completion(data, nil)
+                                                return nil
+                                            }
+                                            itemProvider.registerDataRepresentation(forTypeIdentifier: UTType.json.identifier, visibility: .all) { completion in
+                                                completion(data, nil)
+                                                return nil
+                                            }
                                         }
+                                        return itemProvider
                                     }
                                 }
-                                .listStyle(.inset)
                             }
+                            .listStyle(.inset)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                     }
                     FooterView(totalApps: appManager.apps.count, filteredCount: filteredApps.count)
@@ -289,6 +289,11 @@ struct ContentView: View {
 
             cancellable = notificationCenter.publisher(for: NSApplication.willBecomeActiveNotification)
                 .sink { _ in
+                    // Keep icon size preference in sync when the app becomes active
+                    if let saved = UserDefaults.standard.object(forKey: "iconSizePreference") as? Double {
+                        iconSizePreference = saved
+                    }
+                    // Reload apps if needed
                     if !appManager.isLoaded {
                         appManager.loadInstalledApps()
                     }
