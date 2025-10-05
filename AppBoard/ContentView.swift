@@ -87,75 +87,87 @@ struct ContentView: View {
                 .padding()
             }
         } detail: {
-            VStack(spacing: 0) {
-                HeaderView(
-                    searchText: $searchText,
-                    viewMode: $viewMode,
-                    sortOption: $sortOption,
-                    showSettings: $showSettings,
-                    onReload: reloadApps
-                )
-                .environmentObject(appManager)
+            ZStack {
+                VStack(spacing: 0) {
+                    HeaderView(
+                        searchText: $searchText,
+                        viewMode: $viewMode,
+                        sortOption: $sortOption,
+                        showSettings: $showSettings,
+                        onReload: reloadApps
+                    )
+                    .environmentObject(appManager)
 
-                ScrollView {
-                    if viewMode == .grid {
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 20) {
-                            ForEach(filteredApps) { app in
-                                AppGridItem(app: app, iconSize: iconSize) { selected in
-                                    selectedApp = selected
+                    // Questo è il blocco che ho erroneamente rimosso
+                    ScrollView {
+                        if viewMode == .grid {
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 20) {
+                                ForEach(filteredApps) { app in
+                                    AppGridItem(app: app, iconSize: iconSize) { selected in
+                                        selectedApp = selected
+                                    }
                                 }
                             }
-                        }
-                        .padding()
-                    } else {
-                        VStack(spacing: 1) {
-                            HStack(spacing: 12) {
-                                Text("Nome")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .frame(width: 200, alignment: .leading)
+                            .padding()
+                        } else {
+                            VStack(spacing: 1) {
+                                HStack(spacing: 12) {
+                                    Text("Nome")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .frame(width: 200, alignment: .leading)
+                                    Spacer()
+                                    Text("Categoria")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .frame(width: 100, alignment: .trailing)
+                                    Text("Versione")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .frame(width: 60, alignment: .trailing)
+                                    Text("Dimensione")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .frame(width: 80, alignment: .trailing)
+                                    Text("Ultimo Uso")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .frame(width: 100, alignment: .trailing)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color.gray.opacity(0.1))
 
-                                Spacer()
-
-                                Text("Categoria")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .frame(width: 100, alignment: .trailing)
-
-                                Text("Versione")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .frame(width: 60, alignment: .trailing)
-
-                                Text("Dimensione")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .frame(width: 80, alignment: .trailing)
-
-                                Text("Ultimo Uso")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                                    .frame(width: 100, alignment: .trailing)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color.gray.opacity(0.1))
-
-                            LazyVStack(spacing: 0) {
-                                ForEach(filteredApps) { app in
-                                    AppListItem(app: app) { selected in
-                                        selectedApp = selected
+                                LazyVStack(spacing: 0) {
+                                    ForEach(filteredApps) { app in
+                                        AppListItem(app: app) { selected in
+                                            selectedApp = selected
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    FooterView(totalApps: appManager.apps.count, filteredCount: filteredApps.count)
                 }
-                FooterView(totalApps: appManager.apps.count, filteredCount: filteredApps.count)
+                .blur(radius: appManager.isLoading ? 3 : 0) // Applica un effetto blur durante il caricamento
 
+                // Indicatore di caricamento
+                if appManager.isLoading {
+                    VStack {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                        Text("Caricamento applicazioni installate...")
+                            .padding(.top, 10)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color(NSColor.windowBackgroundColor).opacity(0.7))
+                    .transition(.opacity)
+                }
             }
-        }
-        .sheet(item: $selectedApp) { app in
+            .animation(.default, value: appManager.isLoading)
+        }        .sheet(item: $selectedApp) { app in
             AppDetailView(app: app)
                 .environmentObject(appManager)
         }

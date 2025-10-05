@@ -6,6 +6,7 @@ import Combine
 class AppManager: ObservableObject {
     @Published var apps: [AppInfo] = []
     @Published var categories: [String] = ["Tutte", "Sistema", "Produttività", "Creatività", "Sviluppo", "Giochi", "Social", "Utilità", "Educazione", "Sicurezza", "Multimedia", "Comunicazione", "Finanza", "Salute", "News"]
+    @Published var isLoading = false
     var isLoaded = false
     
     // CloudKit sync integration - optional per evitare crash all'init
@@ -41,14 +42,19 @@ class AppManager: ObservableObject {
     }
 
     func loadInstalledApps() {
-        if isLoaded {
+        if isLoading || isLoaded {
             return
         }
+        
+        // Imposta lo stato di caricamento
+        self.isLoading = true
 
         // Carica cache prima
         loadAppsCache()
         if isLoaded {
             print("Dati app caricati da cache")
+            // Termina il caricamento se i dati sono già pronti dalla cache
+            self.isLoading = false
             return
         }
 
@@ -72,6 +78,9 @@ class AppManager: ObservableObject {
             self.apps = loadedApps.sorted { $0.name.lowercased() < $1.name.lowercased() }
             self.isLoaded = true
             saveAppsCache()
+            
+            // Fine caricamento
+            self.isLoading = false
         }
     }
 
