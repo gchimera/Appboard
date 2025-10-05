@@ -186,7 +186,7 @@ enum SyncStatus: String, CaseIterable {
         switch self {
         case .idle: return "icloud"
         case .syncing: return "icloud.and.arrow.up"
-        case .success: return "icloud"
+        case .success: return "icloud.fill"
         case .error: return "icloud.slash"
         case .offline: return "wifi.slash"
         }

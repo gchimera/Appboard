@@ -26,12 +26,17 @@ struct SettingsView: View {
                 HStack {
                     Text("Dimensione icone:")
                     Spacer()
-                    Picker("Dimensione icone", selection: $iconSize) {
+                    Picker(selection: $iconSize) {
                         ForEach(iconSizes, id: \.self) { size in
-                            Text(iconSizeLabels[size] ?? "\(Int(size)) pt").tag(size)
+                            Text(iconSizeLabels[size] ?? "\\(Int(size)) pt")
+                                .tag(size)
                         }
+                    } label: {
+                        EmptyView()
                     }
-                    .frame(width: 150)
+                    .labelsHidden()
+                    .pickerStyle(MenuPickerStyle())
+                    .frame(minWidth: 200, alignment: .leading)
                 }
             }
             .padding(.horizontal)
@@ -73,12 +78,6 @@ struct SettingsView: View {
             } message: {
                 Text("Questa azione rimuoverà tutte le categorie aggiunte e riassegnare le relative app alle categorie iniziali. L'operazione non può essere annullata.")
             }
-            
-            Divider()
-            
-            // Sync Settings
-            SyncSettingsSection()
-                .padding(.horizontal)
             
             Spacer()
             

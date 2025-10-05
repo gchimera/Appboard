@@ -7,12 +7,15 @@ struct SyncView: View {
     @State private var showingSyncDetails = false
     @State private var accountStatus: CKAccountStatus = .couldNotDetermine
     @State private var showingAccountAlert = false
+    @State private var showToast = false
+    @State private var toastMessage = ""
+    @State private var toastStyle: ToastStyle = .success
     
     var body: some View {
         VStack(spacing: 16) {
             // Header
             HStack {
-                Image(systemName: "icloud")
+                Image(systemName: cloudSymbolName)
                     .font(.title2)
                     .foregroundColor(.blue)
                 
@@ -37,7 +40,18 @@ struct SyncView: View {
             Divider()
             
             // Sync Controls
-            SyncControlsSection()
+            SyncControlsSection(onShowToast: { message, style in
+                toastMessage = message
+                toastStyle = style
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+                    showToast = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        showToast = false
+                    }
+                }
+            })
             
             if showingSyncDetails {
                 Divider()
@@ -57,6 +71,17 @@ struct SyncView: View {
         } message: {
             Text(accountStatusMessage)
         }
+        .overlay(alignment: .bottom) {
+            if showToast {
+                ToastView(message: toastMessage, style: toastStyle)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 12)
+            }
+        }
+    }
+    
+    private var cloudSymbolName: String {
+        cloudKitManager.syncStatus == .success ? "icloud.fill" : "icloud"
     }
     
     private var accountStatusMessage: String {
@@ -142,6 +167,7 @@ struct SyncControlsSection: View {
     @ObservedObject private var cloudKitManager = CloudKitManager.shared
     @EnvironmentObject private var appManager: AppManager
     @State private var isSyncing = false
+    var onShowToast: ((String, ToastStyle) -> Void)? = nil
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -169,6 +195,19 @@ struct SyncControlsSection: View {
                         isSyncing = true
                         await appManager.syncWithiCloud()
                         isSyncing = false
+                        let status = appManager.syncStatus
+                        switch status {
+                        case .success:
+                            onShowToast?("Sincronizzazione completata", .success)
+                        case .error:
+                            onShowToast?("Errore durante la sincronizzazione", .error)
+                        case .offline:
+                            onShowToast?("Offline: impossibile sincronizzare", .error)
+                        case .syncing:
+                            onShowToast?("Sincronizzazione in corso...", .info)
+                        case .idle:
+                            onShowToast?("Sincronizzazione inattiva", .info)
+                        }
                     }
                 }) {
                     HStack {

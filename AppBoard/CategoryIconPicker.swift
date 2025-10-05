@@ -54,6 +54,7 @@ struct CategoryIconPicker: View {
         IconOption(name: "💡", displayName: "Idee", isCustom: false),
         IconOption(name: "⚡", displayName: "Veloce", isCustom: false),
         IconOption(name: "🌟", displayName: "Speciale", isCustom: false),
+        IconOption(name: "✨", displayName: "Brillante", isCustom: false),
         
         // Icone divertenti e creative
         IconOption(name: "🎪", displayName: "Intrattenimento", isCustom: false),

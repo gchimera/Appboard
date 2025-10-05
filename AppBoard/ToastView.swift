@@ -1,12 +1,35 @@
 import SwiftUI
 
+enum ToastStyle {
+    case success
+    case error
+    case info
+}
+
 struct ToastView: View {
     let message: String
+    var style: ToastStyle = .success
+
+    private var iconName: String {
+        switch style {
+        case .success: return "checkmark.circle.fill"
+        case .error: return "xmark.octagon.fill"
+        case .info: return "info.circle.fill"
+        }
+    }
+
+    private var iconColor: Color {
+        switch style {
+        case .success: return .accentColor
+        case .error: return .red
+        case .info: return .blue
+        }
+    }
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.accentColor)
+            Image(systemName: iconName)
+                .foregroundColor(iconColor)
             Text(message)
                 .font(.caption)
                 .foregroundColor(.primary)
