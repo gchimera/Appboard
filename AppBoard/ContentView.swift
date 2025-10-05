@@ -70,13 +70,13 @@ struct ContentView: View {
                     .font(.headline)
                     .padding()
 
-                List(appManager.categories, id: \.self, selection: $selectedCategory) { category in
+                List(appManager.categories, id: \.self) { category in
                     CategoryDropRow(
                         category: category,
                         appManager: appManager,
-                        isSelected: category == selectedCategory
+                        isSelected: category == selectedCategory,
+                        onSelect: { selectedCategory = category }
                     )
-                    .tag(category)
                 }
                 .listStyle(SidebarListStyle())
 
@@ -85,6 +85,16 @@ struct ContentView: View {
                         showCategoryManagement = true
                     }
                     .buttonStyle(.bordered)
+
+                    HStack(spacing: 4) {
+                        Text("developed by")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Link("chimeradev.app", destination: URL(string: "https://chimeradev.app")!)
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                    }
+                    .padding(.top, 4)
                 }
                 .padding()
             }
@@ -301,6 +311,7 @@ struct CategoryDropRow: View {
     @ObservedObject var appManager: AppManager
     let isSelected: Bool
     @State private var isDropTargeted = false
+    var onSelect: (() -> Void)? = nil
     
     var body: some View {
         HStack {
@@ -322,7 +333,10 @@ struct CategoryDropRow: View {
         )
         .scaleEffect(isDropTargeted ? 1.02 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isDropTargeted)
-        .onDrop(of: ["com.appboard.app-info", UTType.json.identifier], isTargeted: $isDropTargeted) { providers in
+        .onTapGesture {
+            onSelect?()
+        }
+        .onDrop(of: ["com.appboard.app-info", "com.appboard.app-info-list", UTType.json.identifier], isTargeted: $isDropTargeted) { providers in
             handleAppDrop(providers: providers)
         }
     }

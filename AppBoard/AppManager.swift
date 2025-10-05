@@ -462,8 +462,8 @@ class AppManager: ObservableObject {
         }
     }
     
-    func resetCategoriesToDefaults() {
-        // Rimuove tutte le categorie personalizzate e riassegna le app alle categorie iniziali
+    func resetCategoriesToDefaults() -> Int {
+        // Rimuove tutte le categorie personalizzate e riassegnate le app alle categorie iniziali
         // Mantieni solo le categorie predefinite, preservando l'ordine corrente
         categories = categories.filter { defaultCategories.contains($0) }
 
@@ -485,6 +485,7 @@ class AppManager: ObservableObject {
         saveCustomCategoryIcons()
         saveAppsCache()
         print("Reset categorie completato. App riassegnate: \(reassigned)")
+        return reassigned
     }
 
     private func defaultCategoryForApp(_ app: AppInfo) -> String {

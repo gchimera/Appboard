@@ -7,6 +7,8 @@ struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appManager: AppManager
     @State private var showResetAlert = false
+    @State private var showToast = false
+    @State private var toastMessage: String = ""
 
     var body: some View {
         VStack(spacing: 20) {
@@ -57,10 +59,19 @@ struct SettingsView: View {
             .alert("Reset Categorie", isPresented: $showResetAlert) {
                 Button("Annulla", role: .cancel) {}
                 Button("Conferma", role: .destructive) {
-                    appManager.resetCategoriesToDefaults()
+                    let count = appManager.resetCategoriesToDefaults()
+                    toastMessage = "Reset completato: \(count) app riassegnate"
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+                        showToast = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            showToast = false
+                        }
+                    }
                 }
             } message: {
-                Text("Questa azione rimuoverà tutte le categorie aggiunte e riassegnerà le relative app alle categorie iniziali. L'operazione non può essere annullata.")
+                Text("Questa azione rimuoverà tutte le categorie aggiunte e riassegnare le relative app alle categorie iniziali. L'operazione non può essere annullata.")
             }
             
             Divider()
@@ -78,5 +89,13 @@ struct SettingsView: View {
         }
         .frame(width: 500, height: 520)
         .padding()
+        .overlay(alignment: .bottom) {
+            if showToast {
+                ToastView(message: toastMessage)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 16)
+                    .zIndex(1)
+            }
+        }
     }
 }
