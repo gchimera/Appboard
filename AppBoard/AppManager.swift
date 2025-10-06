@@ -24,6 +24,7 @@ class AppManager: ObservableObject {
     
     init() {
         loadCustomCategories()
+        loadCategoryOrder()
         loadWebLinks()
         setupCloudKitNotifications()
     }
@@ -278,6 +279,7 @@ class AppManager: ObservableObject {
                 setCustomCategoryIcon(category: name, iconName: iconName)
             }
             saveCustomCategories()
+            saveCategoryOrder()
             
             // Sincronizza con CloudKit
             let categoryData = SyncableCategoryData(
@@ -504,6 +506,7 @@ class AppManager: ObservableObject {
         
         // Salva le modifiche
         saveCustomCategories()
+        saveCategoryOrder()
         saveAppsCache()
         
         print("Categoria rinominata da \(oldName) a \(newName)")
@@ -603,6 +606,7 @@ class AppManager: ObservableObject {
         
         // Salva le modifiche
         saveCustomCategories()
+        saveCategoryOrder()
         saveAppsCache()
         
         print("Categoria \(categoryName) eliminata, app riassegnate a \(defaultCategory)")
@@ -655,6 +659,100 @@ class AppManager: ObservableObject {
     private func loadCustomCategoryIcons() {
         if let saved = UserDefaults.standard.dictionary(forKey: "customCategoryIcons") as? [String: String] {
             customCategoryIcons = saved
+        }
+    }
+    
+    // MARK: Category Order Management
+    
+    // Sposta una categoria in su di una posizione
+    func moveCategoryUp(at index: Int) {
+        // Verifica che l'indice sia valido
+        guard index > 1 && index < categories.count else {
+            print("Impossibile spostare categoria: indice non valido o categoria 'Tutte'")
+            return
+        }
+        
+        // Scambia con la categoria precedente
+        categories.swapAt(index, index - 1)
+        saveCategoryOrder()
+        print("Categoria \(categories[index]) spostata in su")
+    }
+    
+    // Sposta una categoria in giù di una posizione
+    func moveCategoryDown(at index: Int) {
+        // Verifica che l'indice sia valido
+        guard index >= 1 && index < categories.count - 1 else {
+            print("Impossibile spostare categoria: indice non valido o categoria 'Tutte'")
+            return
+        }
+        
+        // Scambia con la categoria successiva
+        categories.swapAt(index, index + 1)
+        saveCategoryOrder()
+        print("Categoria \(categories[index]) spostata in giù")
+    }
+    
+    func moveCategoryItem(from source: IndexSet, to destination: Int) {
+        // Non permettere di spostare "Tutte" (sempre prima posizione)
+        guard let sourceIndex = source.first, sourceIndex != 0 else {
+            print("Impossibile spostare la categoria 'Tutte'")
+            return
+        }
+        
+        // Calcola la nuova posizione tenendo conto di "Tutte"
+        var adjustedDestination = destination
+        
+        // Non permettere di spostare prima di "Tutte"
+        if adjustedDestination == 0 {
+            adjustedDestination = 1
+        }
+        
+        // Esegui lo spostamento manualmente
+        var newCategories = categories
+        let movedItems = source.map { categories[$0] }
+        
+        // Rimuovi gli elementi dalle posizioni originali (in ordine inverso per mantenere gli indici)
+        for index in source.sorted(by: >) {
+            newCategories.remove(at: index)
+        }
+        
+        // Calcola la posizione di inserimento corretta
+        var insertIndex = adjustedDestination
+        if sourceIndex < adjustedDestination {
+            insertIndex -= source.count
+        }
+        
+        // Inserisci gli elementi nella nuova posizione
+        for (offset, item) in movedItems.enumerated() {
+            newCategories.insert(item, at: insertIndex + offset)
+        }
+        
+        categories = newCategories
+        saveCategoryOrder()
+        print("Ordine categorie aggiornato")
+    }
+    
+    private func saveCategoryOrder() {
+        // Salva l'ordine completo delle categorie
+        UserDefaults.standard.set(categories, forKey: "categoryOrder")
+        print("Ordine categorie salvato: \(categories)")
+    }
+    
+    private func loadCategoryOrder() {
+        if let savedOrder = UserDefaults.standard.array(forKey: "categoryOrder") as? [String] {
+            // Verifica che "Tutte" sia sempre prima
+            var orderedCategories = savedOrder.filter { $0 != "Tutte" }
+            orderedCategories.insert("Tutte", at: 0)
+            
+            // Aggiungi eventuali nuove categorie predefinite che non sono nell'ordine salvato
+            for defaultCategory in defaultCategories {
+                if !orderedCategories.contains(defaultCategory) {
+                    orderedCategories.append(defaultCategory)
+                }
+            }
+            
+            categories = orderedCategories
+            print("Ordine categorie caricato: \(categories.count) categorie")
         }
     }
     

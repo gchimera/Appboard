@@ -43,7 +43,7 @@ struct CategoryCreationView: View {
                     .font(.headline)
                 
                 CategoryIconPicker(selectedIcon: $selectedIcon)
-                    .frame(height: 280)
+                    .frame(height: 350)
             }
             
             // Anteprima
@@ -87,7 +87,7 @@ struct CategoryCreationView: View {
             }
         }
         .padding()
-        .frame(width: 550, height: 650)
+        .frame(width: 550, height: 720)
     }
     
     private func saveCategory() {

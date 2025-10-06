@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var showAddWebLink = false
     @State private var showAddCategory = false
     @State private var isGridSelectionMode = false
+    @State private var isCategoryReorderMode = false
     private var notificationCenter = NotificationCenter.default
     @State private var cancellable: AnyCancellable?
 
@@ -92,27 +93,38 @@ struct ContentView: View {
                     
                     Spacer()
                     
-                    // Pulsante rapido per aggiungere categoria
+                    // Pulsante per attivare/disattivare modalità riordino
                     Button {
-                        showAddCategory = true
+                        isCategoryReorderMode.toggle()
                     } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundColor(.blue)
+                        Image(systemName: isCategoryReorderMode ? "checkmark.circle.fill" : "arrow.up.arrow.down.circle")
+                            .foregroundColor(isCategoryReorderMode ? .green : .blue)
                     }
                     .buttonStyle(.plain)
-                    .help("Aggiungi nuova categoria")
+                    .help(isCategoryReorderMode ? "Termina riordino" : "Riordina categorie")
                 }
                 .padding(.horizontal)
                 .padding(.top)
                 .padding(.bottom, 8)
 
-                List(appManager.categories, id: \.self) { category in
-                    CategoryDropRow(
-                        category: category,
-                        appManager: appManager,
-                        isSelected: category == selectedCategory,
-                        onSelect: { selectedCategory = category }
-                    )
+                List {
+                    ForEach(Array(appManager.categories.enumerated()), id: \.element) { index, category in
+                        CategoryDropRow(
+                            category: category,
+                            appManager: appManager,
+                            isSelected: category == selectedCategory,
+                            isReorderMode: isCategoryReorderMode,
+                            categoryIndex: index,
+                            totalCategories: appManager.categories.count,
+                            onSelect: { selectedCategory = category },
+                            onMoveUp: {
+                                appManager.moveCategoryUp(at: index)
+                            },
+                            onMoveDown: {
+                                appManager.moveCategoryDown(at: index)
+                            }
+                        )
+                    }
                 }
                 .listStyle(SidebarListStyle())
 
@@ -417,29 +429,81 @@ struct CategoryDropRow: View {
     let category: String
     @ObservedObject var appManager: AppManager
     let isSelected: Bool
+    let isReorderMode: Bool
+    let categoryIndex: Int
+    let totalCategories: Int
+    var onSelect: (() -> Void)? = nil
+    var onMoveUp: (() -> Void)? = nil
+    var onMoveDown: (() -> Void)? = nil
     @State private var isDropTargeted = false
     @State private var showEditDialog = false
     @State private var showDeleteAlert = false
     @State private var editedName = ""
-    var onSelect: (() -> Void)? = nil
+    
+    // Determina se la categoria può essere spostata in su
+    private var canMoveUp: Bool {
+        // "Tutte" non può mai essere spostata
+        guard category != "Tutte" else { return false }
+        // Non può spostarsi oltre "Tutte" (indice 1 è il minimo)
+        return categoryIndex > 1
+    }
+    
+    // Determina se la categoria può essere spostata in giù
+    private var canMoveDown: Bool {
+        // "Tutte" non può mai essere spostata
+        guard category != "Tutte" else { return false }
+        // Non può spostarsi oltre l'ultima posizione
+        return categoryIndex < totalCategories - 1
+    }
     
     var body: some View {
         HStack {
+            // Mostra frecce solo in modalità riordino
+            if isReorderMode {
+                VStack(spacing: 2) {
+                    Button {
+                        onMoveUp?()
+                    } label: {
+                        Image(systemName: "chevron.up")
+                            .font(.caption2)
+                            .foregroundColor(canMoveUp ? .blue : .gray.opacity(0.3))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canMoveUp)
+                    .help(canMoveUp ? "Sposta su" : "Impossibile spostare")
+                    
+                    Button {
+                        onMoveDown?()
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.caption2)
+                            .foregroundColor(canMoveDown ? .blue : .gray.opacity(0.3))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!canMoveDown)
+                    .help(canMoveDown ? "Sposta giù" : "Impossibile spostare")
+                }
+                .frame(width: 20)
+            }
+            
             CategoryIconView(category: category, size: 18, appManager: appManager)
             Text(category)
                 .fontWeight(isSelected ? .semibold : .regular)
             
-            // Badge per categorie personalizzate
-//            if appManager.isCustomCategory(category) {
-//                Image(systemName: "person.crop.circle.badge.checkmark")
-//                    .font(.caption2)
-//                    .foregroundColor(.blue)
-//                    .help("Categoria personalizzata (modifica con click destro)")
-//            }
-//            Spacer()
+            // Indicatore per categoria "Tutte" (non riordinabile)
+            if category == "Tutte" {
+                Image(systemName: "pin.fill")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .help("Categoria fissa (non riordinabile)")
+            }
             
-            Text("\(appManager.countForCategory(category))")
-                .foregroundColor(.secondary)
+            Spacer()
+            
+            if !isReorderMode {
+                Text("\(appManager.countForCategory(category))")
+                    .foregroundColor(.secondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
@@ -453,7 +517,9 @@ struct CategoryDropRow: View {
         .scaleEffect(isDropTargeted ? 1.02 : 1.0)
         .animation(.easeInOut(duration: 0.2), value: isDropTargeted)
         .onTapGesture {
-            onSelect?()
+            if !isReorderMode {
+                onSelect?()
+            }
         }
         .onDrop(of: ["com.appboard.app-info", "com.appboard.app-info-list", "com.appboard.weblink", UTType.json.identifier], isTargeted: $isDropTargeted) { providers in
             handleDrop(providers: providers)
