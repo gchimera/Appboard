@@ -3,6 +3,7 @@ import SwiftUI
 struct AddWebLinkView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appManager: AppManager
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     @State private var name: String = ""
     @State private var url: String = ""
@@ -15,7 +16,7 @@ struct AddWebLinkView: View {
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("Aggiungi Sito Web")
+            Text("add_website_title".localized())
                 .font(.title2)
                 .fontWeight(.semibold)
             
@@ -36,10 +37,10 @@ struct AddWebLinkView: View {
             VStack(alignment: .leading, spacing: 16) {
                 // URL field
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("URL")
+                    Text("url".localized())
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    TextField("https://example.com", text: $url)
+                    TextField("url_placeholder".localized(), text: $url)
                         .textFieldStyle(.roundedBorder)
                         .onSubmit {
                             fetchMetadata()
@@ -48,20 +49,20 @@ struct AddWebLinkView: View {
                 
                 // Name field
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Nome")
+                    Text("name".localized())
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    TextField("Nome del sito", text: $name)
+                    TextField("website_name_placeholder".localized(), text: $name)
                         .textFieldStyle(.roundedBorder)
                 }
                 
                 // Category picker
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Categoria")
+                    Text("category".localized())
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Picker("Categoria", selection: $selectedCategory) {
-                        Text("Nessuna").tag(nil as String?)
+                    Picker("category".localized(), selection: $selectedCategory) {
+                        Text("none".localized()).tag(nil as String?)
                         ForEach(appManager.categories, id: \.self) { category in
                             Text(category).tag(category as String?)
                         }
@@ -73,7 +74,7 @@ struct AddWebLinkView: View {
                 if let description = generatedDescription {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
-                            Text("Descrizione")
+                            Text("description".localized())
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Image(systemName: "sparkles")
@@ -103,12 +104,12 @@ struct AddWebLinkView: View {
             
             // Buttons
             HStack(spacing: 12) {
-                Button("Annulla") {
+                Button("cancel".localized()) {
                     dismiss()
                 }
                 .keyboardShortcut(.escape)
                 
-                Button("Aggiungi") {
+                Button("add".localized()) {
                     addWebLink()
                 }
                 .keyboardShortcut(.return)
@@ -187,7 +188,7 @@ struct AddWebLinkView: View {
             // Validate URL
             guard URL(string: finalURL) != nil else {
                 await MainActor.run {
-                    errorMessage = "URL non valido"
+                    errorMessage = "invalid_url".localized()
                     showError = true
                     isLoading = false
                 }

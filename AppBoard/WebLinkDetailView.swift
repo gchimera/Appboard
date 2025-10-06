@@ -4,6 +4,7 @@ struct WebLinkDetailView: View {
     let webLink: WebLink
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appManager: AppManager
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     @State private var editedName: String
     @State private var editedURL: String
@@ -40,7 +41,7 @@ struct WebLinkDetailView: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     if isEditing {
-                        TextField("Nome", text: $editedName)
+                        TextField("name".localized(), text: $editedName)
                             .textFieldStyle(.roundedBorder)
                             .font(.title2)
                     } else {
@@ -62,9 +63,9 @@ struct WebLinkDetailView: View {
             // Details
             VStack(alignment: .leading, spacing: 16) {
                 // URL
-                DetailRow(label: "URL") {
+                DetailRow(label: "url".localized()) {
                     if isEditing {
-                        TextField("URL", text: $editedURL)
+                        TextField("url".localized(), text: $editedURL)
                             .textFieldStyle(.roundedBorder)
                     } else {
                         Text(webLink.url)
@@ -73,10 +74,10 @@ struct WebLinkDetailView: View {
                 }
                 
                 // Category
-                DetailRow(label: "Categoria") {
+                DetailRow(label: "category".localized()) {
                     if isEditing {
                         Picker("", selection: $selectedCategory) {
-                            Text("Nessuna").tag(nil as String?)
+                            Text("none".localized()).tag(nil as String?)
                             ForEach(appManager.categories, id: \.self) { category in
                                 if category != "Tutte" {
                                     Text(category).tag(category as String?)
@@ -85,12 +86,12 @@ struct WebLinkDetailView: View {
                         }
                         .pickerStyle(.menu)
                     } else {
-                        Text(webLink.categoryName ?? "Nessuna")
+                        Text(webLink.categoryName ?? "none".localized())
                     }
                 }
                 
                 // Description
-                DetailRow(label: "Descrizione") {
+                DetailRow(label: "description".localized()) {
                     if isEditing {
                         VStack(alignment: .leading, spacing: 8) {
                             TextEditor(text: $editedDescription)
@@ -110,7 +111,7 @@ struct WebLinkDetailView: View {
                                     } else {
                                         Image(systemName: "sparkles")
                                     }
-                                    Text("Rigenera con AI")
+                                    Text("regenerate_with_ai".localized())
                                 }
                                 .font(.caption)
                             }
@@ -124,7 +125,7 @@ struct WebLinkDetailView: View {
                                 .foregroundColor(.secondary)
                                 .textSelection(.enabled)
                         } else {
-                            Text("Nessuna descrizione")
+                            Text("no_description".localized())
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                                 .italic()
@@ -133,7 +134,7 @@ struct WebLinkDetailView: View {
                 }
                 
                 // Date added
-                DetailRow(label: "Data Aggiunta") {
+                DetailRow(label: "date_added".localized()) {
                     Text(webLink.dateAdded.formatted(date: .abbreviated, time: .shortened))
                 }
             }
@@ -143,7 +144,7 @@ struct WebLinkDetailView: View {
             // Action buttons
             HStack(spacing: 12) {
                 if isEditing {
-                    Button("Annulla") {
+                    Button("cancel".localized()) {
                         isEditing = false
                         editedName = webLink.name
                         editedURL = webLink.url
@@ -151,28 +152,28 @@ struct WebLinkDetailView: View {
                         selectedCategory = webLink.categoryName
                     }
                     
-                    Button("Salva") {
+                    Button("save".localized()) {
                         saveChanges()
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(editedName.isEmpty || editedURL.isEmpty)
                 } else {
-                    Button("Apri nel Browser") {
+                    Button("open_in_browser".localized()) {
                         if let url = URL(string: webLink.url) {
                             NSWorkspace.shared.open(url)
                         }
                     }
                     .buttonStyle(.borderedProminent)
                     
-                    Button("Modifica") {
+                    Button("edit".localized()) {
                         isEditing = true
                     }
                     
-                    Button("Elimina", role: .destructive) {
+                    Button("delete".localized(), role: .destructive) {
                         showDeleteConfirmation = true
                     }
                     
-                    Button("Chiudi") {
+                    Button("close".localized()) {
                         dismiss()
                     }
                 }
@@ -181,14 +182,14 @@ struct WebLinkDetailView: View {
         }
         .frame(width: 500, height: 400)
         .padding()
-        .alert("Elimina Collegamento", isPresented: $showDeleteConfirmation) {
-            Button("Annulla", role: .cancel) { }
-            Button("Elimina", role: .destructive) {
+        .alert("delete_link".localized(), isPresented: $showDeleteConfirmation) {
+            Button("cancel".localized(), role: .cancel) { }
+            Button("delete".localized(), role: .destructive) {
                 appManager.deleteWebLink(webLink)
                 dismiss()
             }
         } message: {
-            Text("Sei sicuro di voler eliminare '\(webLink.name)'? Questa azione non può essere annullata.")
+            Text(String(format: "delete_link_message".localized(), webLink.name))
         }
     }
     

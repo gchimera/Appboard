@@ -5,6 +5,7 @@ import AppKit
 
 struct ContentView: View {
     @StateObject private var appManager = AppManager()
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var searchText = ""
     @State private var selectedCategory = "Tutte"
     @State private var viewMode: ViewMode = .grid
@@ -23,23 +24,35 @@ struct ContentView: View {
     @State private var cancellable: AnyCancellable?
 
     let iconSizes: [CGFloat] = [32, 48, 64, 96, 128]
-    let iconSizeLabels: [CGFloat: String] = [
-        32: "Piccole",
-        48: "Compatte",
-        64: "Medie",
-        96: "Grandi",
-        128: "Molto grandi"
-    ]
+    
+    var iconSizeLabels: [CGFloat: String] {
+        [
+            32: "icon_size_small".localized(),
+            48: "icon_size_compact".localized(),
+            64: "icon_size_medium".localized(),
+            96: "icon_size_large".localized(),
+            128: "icon_size_very_large".localized()
+        ]
+    }
 
     enum ViewMode {
         case grid, list
     }
 
     enum SortOption: String, CaseIterable {
-        case name = "Nome"
-        case category = "Categoria"
-        case size = "Dimensione"
-        case lastUsed = "Ultimo utilizzo"
+        case name
+        case category
+        case size
+        case lastUsed
+        
+        var displayName: String {
+            switch self {
+            case .name: return "sort_name".localized()
+            case .category: return "sort_category".localized()
+            case .size: return "sort_size".localized()
+            case .lastUsed: return "sort_last_used".localized()
+            }
+        }
     }
 
     var filteredApps: [AppInfo] {
@@ -88,7 +101,7 @@ struct ContentView: View {
         NavigationSplitView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text("Categorie")
+                    Text("categories".localized())
                         .font(.headline)
                     
                     Spacer()
@@ -101,7 +114,7 @@ struct ContentView: View {
                             .foregroundColor(isCategoryReorderMode ? .green : .blue)
                     }
                     .buttonStyle(.plain)
-                    .help(isCategoryReorderMode ? "Termina riordino" : "Riordina categorie")
+                    .help(isCategoryReorderMode ? "end_reorder".localized() : "start_reorder".localized())
                 }
                 .padding(.horizontal)
                 .padding(.top)
@@ -129,13 +142,13 @@ struct ContentView: View {
                 .listStyle(SidebarListStyle())
 
                 VStack(spacing: 8) {
-                    Button("Gestisci Categorie") {
+                    Button("manage_categories".localized()) {
                         showCategoryManagement = true
                     }
                     .buttonStyle(.bordered)
 
                     HStack(spacing: 4) {
-                        Text("developed by")
+                        Text("developed_by".localized())
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         Link("chimeradev.app", destination: URL(string: "https://chimeradev.app")!)
@@ -261,24 +274,24 @@ struct ContentView: View {
                         VStack(spacing: 0) {
                             // Header
                             HStack(spacing: 12) {
-                                Text("Nome")
+                                Text("list_name".localized())
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .frame(width: 200, alignment: .leading)
                                 Spacer()
-                                Text("Categoria")
+                                Text("list_category".localized())
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .frame(width: 100, alignment: .trailing)
-                                Text("Versione")
+                                Text("list_version".localized())
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .frame(width: 60, alignment: .trailing)
-                                Text("Dimensione")
+                                Text("list_size".localized())
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .frame(width: 80, alignment: .trailing)
-                                Text("Ultimo Uso")
+                                Text("list_last_used".localized())
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .frame(width: 100, alignment: .trailing)
@@ -350,7 +363,7 @@ struct ContentView: View {
                     VStack {
                         ProgressView()
                             .scaleEffect(1.5)
-                        Text("Caricamento applicazioni installate...")
+                        Text("loading_apps".localized())
                             .padding(.top, 10)
                             .foregroundColor(.secondary)
                     }
@@ -470,7 +483,7 @@ struct CategoryDropRow: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(!canMoveUp)
-                    .help(canMoveUp ? "Sposta su" : "Impossibile spostare")
+                    .help(canMoveUp ? "move_up".localized() : "cannot_move".localized())
                     
                     Button {
                         onMoveDown?()
@@ -481,13 +494,13 @@ struct CategoryDropRow: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(!canMoveDown)
-                    .help(canMoveDown ? "Sposta giù" : "Impossibile spostare")
+                    .help(canMoveDown ? "move_down".localized() : "cannot_move".localized())
                 }
                 .frame(width: 20)
             }
             
             CategoryIconView(category: category, size: 18, appManager: appManager)
-            Text(category)
+            Text(category == "Tutte" ? "all_categories".localized() : category)
                 .fontWeight(isSelected ? .semibold : .regular)
             
             // Indicatore per categoria "Tutte" (non riordinabile)
@@ -495,7 +508,7 @@ struct CategoryDropRow: View {
                 Image(systemName: "pin.fill")
                     .font(.caption2)
                     .foregroundColor(.secondary)
-                    .help("Categoria fissa (non riordinabile)")
+                    .help("fixed_category".localized())
             }
             
             Spacer()
@@ -531,7 +544,7 @@ struct CategoryDropRow: View {
                     editedName = category
                     showEditDialog = true
                 } label: {
-                    Label("Rinomina", systemImage: "pencil")
+                    Label("rename".localized(), systemImage: "pencil")
                 }
                 
                 Divider()
@@ -539,36 +552,36 @@ struct CategoryDropRow: View {
                 Button(role: .destructive) {
                     showDeleteAlert = true
                 } label: {
-                    Label("Elimina", systemImage: "trash")
+                    Label("delete".localized(), systemImage: "trash")
                 }
                 
                 if !appManager.isCustomCategory(category) {
                     Divider()
-                    Text("Categoria Predefinita")
+                    Text("default_category".localized())
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
         }
-        .alert("Rinomina Categoria", isPresented: $showEditDialog) {
-            TextField("Nuovo nome", text: $editedName)
-            Button("Annulla", role: .cancel) { }
-            Button("Rinomina") {
+        .alert("rename_category".localized(), isPresented: $showEditDialog) {
+            TextField("new_name".localized(), text: $editedName)
+            Button("cancel".localized(), role: .cancel) { }
+            Button("rename".localized()) {
                 if !editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     _ = appManager.renameCategory(from: category, to: editedName)
                 }
             }
         } message: {
-            Text("Inserisci il nuovo nome per la categoria '\(category)'")
+            Text(String(format: "rename_category_message".localized(), category))
         }
-        .alert("Elimina Categoria", isPresented: $showDeleteAlert) {
-            Button("Annulla", role: .cancel) { }
-            Button("Elimina", role: .destructive) {
+        .alert("delete_category".localized(), isPresented: $showDeleteAlert) {
+            Button("cancel".localized(), role: .cancel) { }
+            Button("delete".localized(), role: .destructive) {
                 _ = appManager.deleteCategory(category)
             }
         } message: {
             let itemCount = appManager.countForCategory(category)
-            Text("Sei sicuro di voler eliminare '\(category)'? \(itemCount) elementi verranno spostati in 'Utilità'.")
+            Text(String(format: "delete_category_message".localized(), category, itemCount))
         }
     }
     

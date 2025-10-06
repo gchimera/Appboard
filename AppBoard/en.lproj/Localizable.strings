@@ -1,0 +1,162 @@
+/* General */
+"close" = "Close";
+"cancel" = "Cancel";
+"save" = "Save";
+"confirm" = "Confirm";
+"delete" = "Delete";
+"edit" = "Edit";
+"add" = "Add";
+"create" = "Create";
+"done" = "Done";
+"test" = "Test";
+"rename" = "Rename";
+
+/* Settings View */
+"settings" = "Settings";
+"interface" = "Interface";
+"icon_size" = "Icon size:";
+"icon_size_small" = "Small";
+"icon_size_compact" = "Compact";
+"icon_size_medium" = "Medium";
+"icon_size_large" = "Large";
+"icon_size_very_large" = "Very Large";
+
+/* AI Settings */
+"artificial_intelligence" = "Artificial Intelligence";
+"ai_description" = "Configure your OpenAI API key to automatically generate website descriptions.";
+"hide_key" = "Hide key";
+"show_key" = "Show key";
+"api_key_saved" = "API key saved";
+"connection_successful" = "✅ Connection successful! API working";
+"connection_unexpected" = "⚠️ Connection works but unexpected response";
+"get_api_key_from" = "Get an API key from";
+"no_api_key_warning" = "Without an API key, fallback descriptions based on the URL will be generated.";
+
+/* Auto-start Settings */
+"auto_start" = "Auto-start";
+"auto_start_description" = "To make AppBoard start automatically at login:";
+"auto_start_step1" = "Open System Settings";
+"auto_start_step1_detail" = "Apple Menu () > System Settings";
+"auto_start_step2" = "Go to General > Login Items";
+"auto_start_step2_detail" = "Or search for \"Login Items\" in the search bar";
+"auto_start_step3" = "Click the \"+\" button under \"Open at Login\"";
+"auto_start_step4" = "Select AppBoard from the list";
+"auto_start_step4_detail" = "Usually found in Applications";
+"open_system_settings" = "Open System Settings";
+
+/* Categories */
+"categories" = "Categories";
+"all_categories" = "All";
+"category" = "Category";
+"manage_categories" = "Manage Categories";
+"reset_categories" = "Reset Categories";
+"reset_categories_description" = "Reset the category list by removing added categories and reassigning apps to initial categories.";
+"reset_categories_help" = "Removes custom categories and reassigns apps to initial categories";
+"reset_categories_alert_title" = "Reset Categories";
+"reset_categories_alert_message" = "This action will remove all added categories and reassign their apps to the initial categories. This operation cannot be undone.";
+"reset_completed" = "Reset completed: %d apps reassigned";
+"custom_category" = "Custom category";
+"default_category" = "Default category";
+"fixed_category" = "Fixed category (not reorderable)";
+"move_up" = "Move up";
+"move_down" = "Move down";
+"cannot_move" = "Cannot move";
+"start_reorder" = "Reorder categories";
+"end_reorder" = "End reorder";
+
+/* Category Management */
+"category_management_title" = "Category Management";
+"create_new_category" = "Create New Category";
+"delete_category" = "Delete Category";
+"delete_category_message" = "Are you sure you want to delete the category '%@'? %d apps will be moved to 'Utility'.";
+"new_category" = "New Category";
+"category_name" = "Category Name";
+"enter_category_name" = "Enter the category name";
+"icon" = "Icon";
+"preview" = "Preview";
+"rename_category" = "Rename Category";
+"rename_category_message" = "Enter the new name for the category '%@'";
+"new_name" = "New name";
+
+/* Category Selector */
+"change_category" = "Change Category";
+"for_app" = "For: %@";
+"current_category" = "Current Category";
+"select_new_category" = "Select New Category";
+"new_category_name" = "New Category Name";
+"enter_new_category_name" = "Enter category name";
+"confirm_change" = "Confirm Change";
+
+/* Header View */
+"search_apps" = "Search applications...";
+"sort_by" = "Sort by";
+"view_mode" = "View";
+"select" = "Select";
+"enable_multi_select" = "Enable multi-selection in grid";
+"end_selection" = "End selection";
+"add_website" = "Add Website";
+"reload_apps" = "Reload apps and clear cache";
+"click_to_open" = "💡 Click to open • Right-click for options";
+
+/* Sort Options */
+"sort_name" = "Name";
+"sort_category" = "Category";
+"sort_size" = "Size";
+"sort_last_used" = "Last used";
+
+/* App Detail View */
+"version" = "Version %@";
+"open_app" = "Open App";
+"show_in_finder" = "Show in Finder";
+"copy_path" = "Copy path";
+"size" = "Size";
+"bundle_id" = "Bundle ID";
+"path" = "Path";
+"last_used" = "Last used";
+"change" = "Change";
+
+/* Add WebLink View */
+"add_website_title" = "Add Website";
+"url" = "URL";
+"url_placeholder" = "https://example.com";
+"name" = "Name";
+"website_name_placeholder" = "Website name";
+"none" = "None";
+"description" = "Description";
+"invalid_url" = "Invalid URL";
+
+/* WebLink Detail View */
+"open_in_browser" = "Open in Browser";
+"delete_link" = "Delete Link";
+"delete_link_message" = "Are you sure you want to delete '%@'? This action cannot be undone.";
+"regenerate_with_ai" = "Regenerate with AI";
+"no_description" = "No description";
+"date_added" = "Date Added";
+
+/* Footer View */
+"total_apps" = "%d total apps";
+"filtered_apps" = "%d of %d apps";
+"drag_to_categories" = "Drag apps to categories on the left to assign them";
+
+/* Loading */
+"loading_apps" = "Loading installed applications...";
+
+/* Version Info */
+"app_version" = "AppBoard version %@ (%@)";
+"app_version_default" = "AppBoard version 1.0";
+
+/* Credits */
+"developed_by" = "developed by";
+
+/* Language Settings */
+"language" = "Language";
+"language_english" = "English";
+"language_italian" = "Italiano";
+"language_change_note" = "The app will automatically update when you change the language.";
+
+/* List View Headers */
+"list_name" = "Name";
+"list_category" = "Category";
+"list_version" = "Version";
+"list_size" = "Size";
+"list_last_used" = "Last Used";

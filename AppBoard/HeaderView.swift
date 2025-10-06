@@ -8,29 +8,30 @@ struct HeaderView: View {
     @Binding var isGridSelectionMode: Bool
     @Binding var showAddWebLink: Bool
     let onReload: () -> Void
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
         HStack {
-            TextField("Cerca applicazioni...", text: $searchText)
+            TextField("search_apps".localized(), text: $searchText)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .frame(maxWidth: 300)
             
             Spacer()
             
-            Text("💡 Click per aprire • Click destro per opzioni")
+            Text("click_to_open".localized())
                 .font(.caption)
                 .foregroundColor(.secondary)
             
             Spacer()
             
-            Picker("Ordina per", selection: $sortOption) {
+            Picker("sort_by".localized(), selection: $sortOption) {
                 ForEach(ContentView.SortOption.allCases, id: \.self) { option in
-                    Text(option.rawValue).tag(option)
+                    Text(option.displayName).tag(option)
                 }
             }
             .frame(width: 150)
             
-            Picker("Vista", selection: $viewMode) {
+            Picker("view_mode".localized(), selection: $viewMode) {
                 Image(systemName: "square.grid.2x2").tag(ContentView.ViewMode.grid)
                 Image(systemName: "list.bullet").tag(ContentView.ViewMode.list)
             }
@@ -43,11 +44,11 @@ struct HeaderView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: isGridSelectionMode ? "checkmark.square.fill" : "checkmark.square")
-                        Text(isGridSelectionMode ? "Fine" : "Seleziona")
+                        Text(isGridSelectionMode ? "done".localized() : "select".localized())
                     }
                 }
                 .buttonStyle(.bordered)
-                .help(isGridSelectionMode ? "Termina selezione" : "Abilita selezione multipla nella griglia")
+                .help(isGridSelectionMode ? "end_selection".localized() : "enable_multi_select".localized())
             }
             
             // Add WebLink button
@@ -56,7 +57,7 @@ struct HeaderView: View {
             } label: {
                 Image(systemName: "link.badge.plus")
                     .imageScale(.large)
-                    .help("Aggiungi Sito Web")
+                    .help("add_website".localized())
             }
             .buttonStyle(.plain)
             .padding(.trailing, 8)
@@ -70,7 +71,7 @@ struct HeaderView: View {
             } label: {
                 Image(systemName: "gearshape")
                     .imageScale(.large)
-                    .help("Impostazioni")
+                    .help("settings".localized())
             }
             .buttonStyle(.plain)
             
@@ -80,7 +81,7 @@ struct HeaderView: View {
                        } label: {
                            Image(systemName: "arrow.clockwise")
                                .imageScale(.large)
-                               .help("Ricarica app e cancella cache")
+                               .help("reload_apps".localized())
                        }
                        .buttonStyle(.plain)
                        .padding(.leading, 8)

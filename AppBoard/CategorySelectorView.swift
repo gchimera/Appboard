@@ -3,6 +3,7 @@ import SwiftUI
 struct CategorySelectorView: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var appManager: AppManager
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var selectedCategory: String
     @State private var showNewCategoryField = false
     @State private var newCategoryName = ""
@@ -27,18 +28,18 @@ struct CategorySelectorView: View {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Cambia Categoria")
+                    Text("change_category".localized())
                         .font(.title2)
                         .fontWeight(.semibold)
                     
-                    Text("Per: \(app.name)")
+                    Text(String(format: "for_app".localized(), app.name))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 
                 Spacer()
                 
-                Button("Annulla") {
+                Button("cancel".localized()) {
                     dismiss()
                 }
             }
@@ -47,7 +48,7 @@ struct CategorySelectorView: View {
             
             // Categoria attuale
             VStack(alignment: .leading, spacing: 8) {
-                Text("Categoria Attuale")
+                Text("current_category".localized())
                     .font(.headline)
                 
                 HStack {
@@ -63,7 +64,7 @@ struct CategorySelectorView: View {
             
             // Seleziona nuova categoria
             VStack(alignment: .leading, spacing: 12) {
-                Text("Seleziona Nuova Categoria")
+                Text("select_new_category".localized())
                     .font(.headline)
                 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
@@ -100,7 +101,7 @@ struct CategorySelectorView: View {
                     }) {
                         HStack {
                             Text("➕")
-                            Text("Nuova Categoria")
+                            Text("new_category".localized())
                                 .font(.body)
                             Spacer()
                         }
@@ -118,23 +119,23 @@ struct CategorySelectorView: View {
                 // Campo per nuova categoria
                 if showNewCategoryField {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Nome Nuova Categoria")
+                        Text("new_category_name".localized())
                             .font(.subheadline)
                             .fontWeight(.medium)
                         
                         HStack {
-                            TextField("Inserisci nome categoria", text: $newCategoryName)
+                            TextField("enter_new_category_name".localized(), text: $newCategoryName)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .onSubmit {
                                     createNewCategory()
                                 }
                             
-                            Button("Crea") {
+                            Button("create".localized()) {
                                 createNewCategory()
                             }
                             .disabled(newCategoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             
-                            Button("Annulla") {
+                            Button("cancel".localized()) {
                                 showNewCategoryField = false
                                 newCategoryName = ""
                             }
@@ -152,12 +153,12 @@ struct CategorySelectorView: View {
             HStack {
                 Spacer()
                 
-                Button("Annulla") {
+                Button("cancel".localized()) {
                     dismiss()
                 }
                 .keyboardShortcut(.cancelAction)
                 
-                Button("Conferma Cambio") {
+                Button("confirm_change".localized()) {
                     saveCategory()
                 }
                 .buttonStyle(.borderedProminent)

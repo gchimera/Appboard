@@ -5,6 +5,7 @@ struct AppDetailView: View {
     let app: AppInfo
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appManager: AppManager
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var showCategorySelector = false
     
     var body: some View {
@@ -21,7 +22,7 @@ struct AppDetailView: View {
                     Text(app.name)
                         .font(.system(.title, design: .rounded).bold())
                         .lineLimit(2)
-                    Text("Versione \(app.version)")
+                    Text(String(format: "version".localized(), app.version))
                         .font(.callout)
                         .foregroundColor(.secondary)
                 }
@@ -44,26 +45,26 @@ struct AppDetailView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     HStack(spacing: 16) {
                         Button(action: openApp) {
-                            Label("Apri App", systemImage: "play.fill")
+                            Label("open_app".localized(), systemImage: "play.fill")
                         }
                         .buttonStyle(.borderedProminent)
                         
                         Button(action: showInFinder) {
-                            Label("Mostra nel Finder", systemImage: "folder.fill")
+                            Label("show_in_finder".localized(), systemImage: "folder.fill")
                         }
                         .buttonStyle(.bordered)
                         
                         Button(action: copyPath) {
-                            Label("Copia percorso", systemImage: "doc.on.doc")
+                            Label("copy_path".localized(), systemImage: "doc.on.doc")
                         }
                         .buttonStyle(.bordered)
                     }
                     Divider()
                     categoryRow()
-                    infoRow(label: "Dimensione", value: app.size, icon: "internaldrive")
-                    infoRow(label: "Bundle ID", value: app.bundleIdentifier, icon: "doc.plaintext")
-                    infoRow(label: "Percorso", value: app.path, icon: "signpost.right")
-                    infoRow(label: "Ultimo utilizzo", value: formatDate(app.lastUsed), icon: "clock.arrow.circlepath")
+                    infoRow(label: "size".localized(), value: app.size, icon: "internaldrive")
+                    infoRow(label: "bundle_id".localized(), value: app.bundleIdentifier, icon: "doc.plaintext")
+                    infoRow(label: "path".localized(), value: app.path, icon: "signpost.right")
+                    infoRow(label: "last_used".localized(), value: formatDate(app.lastUsed), icon: "clock.arrow.circlepath")
                 }
                 .padding(24)
             }
@@ -89,7 +90,7 @@ struct AppDetailView: View {
                 .foregroundColor(.accentColor)
                 .frame(width: 23)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Categoria").font(.caption).foregroundColor(.secondary)
+                Text("category".localized()).font(.caption).foregroundColor(.secondary)
                 HStack {
                     HStack(spacing: 6) {
                         CategoryIconView(category: app.category, size: 16)
@@ -97,7 +98,7 @@ struct AppDetailView: View {
                             .font(.body)
                     }
                     Spacer()
-                    Button("Cambia") {
+                    Button("change".localized()) {
                         showCategorySelector = true
                     }
                     .buttonStyle(.bordered)
@@ -124,7 +125,9 @@ struct AppDetailView: View {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
-        formatter.locale = Locale(identifier: "it_IT")
+        // Use current localization language
+        let localeIdentifier = localizationManager.currentLanguage == "it" ? "it_IT" : "en_US"
+        formatter.locale = Locale(identifier: localeIdentifier)
         return formatter.string(from: date)
     }
     

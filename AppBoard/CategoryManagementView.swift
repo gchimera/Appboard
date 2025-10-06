@@ -3,6 +3,7 @@ import SwiftUI
 struct CategoryManagementView: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var appManager: AppManager
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var editingCategory: String?
     @State private var newName: String = ""
     @State private var showingDeleteAlert = false
@@ -13,13 +14,13 @@ struct CategoryManagementView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Gestione Categorie")
+                Text("category_management_title".localized())
                     .font(.title2)
                     .fontWeight(.semibold)
                 
                 Spacer()
                 
-                Button("Chiudi") {
+                Button("close".localized()) {
                     dismiss()
                 }
             }
@@ -27,46 +28,37 @@ struct CategoryManagementView: View {
             
             Divider()
             
-            // Lista categorie
+            // Pulsante per aggiungere nuova categoria (in cima)
+            Button(action: {
+                showingCreateNew = true
+            }) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(.green)
+                    Text("create_new_category".localized())
+                        .fontWeight(.medium)
+                    Spacer()
+                }
+                .padding()
+                .background(Color.green.opacity(0.1))
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                )
+            }
+            .buttonStyle(PlainButtonStyle())
+            .padding()
+            
+            Divider()
+            
+            // Lista categorie unificate
             ScrollView {
                 LazyVStack(spacing: 12) {
-                    // Sezione categorie predefinite
-                    sectionHeader("Categorie Predefinite", subtitle: "Non possono essere modificate")
-                    
-                    ForEach(appManager.categories.filter { !appManager.isCustomCategory($0) && $0 != "Tutte" }, id: \.self) { category in
-                        defaultCategoryRow(category)
+                    // Tutte le categorie (escluso "Tutte")
+                    ForEach(appManager.categories.filter { $0 != "Tutte" }, id: \.self) { category in
+                        categoryRow(category)
                     }
-                    
-                    // Sezione categorie personalizzate
-                    if !appManager.customCategories.isEmpty {
-                        sectionHeader("Categorie Personalizzate", subtitle: "Possono essere modificate o eliminate")
-                        
-                        ForEach(appManager.customCategories, id: \.self) { category in
-                            customCategoryRow(category)
-                        }
-                    }
-                    
-                    // Pulsante per aggiungere nuova categoria
-                    Button(action: {
-                        showingCreateNew = true
-                    }) {
-                        HStack {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundColor(.green)
-                            Text("Aggiungi Nuova Categoria")
-                                .fontWeight(.medium)
-                            Spacer()
-                        }
-                        .padding()
-                        .background(Color.green.opacity(0.1))
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.green.opacity(0.3), lineWidth: 1)
-                        )
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.top, 20)
                 }
                 .padding()
             }
@@ -78,8 +70,8 @@ struct CategoryManagementView: View {
                 showingCreateNew = false
             }
         }
-        .alert("Elimina Categoria", isPresented: $showingDeleteAlert) {
-            Button("Elimina", role: .destructive) {
+        .alert("delete_category".localized(), isPresented: $showingDeleteAlert) {
+            Button("delete".localized(), role: .destructive) {
                 if let categoryToDelete = categoryToDelete {
                     let success = appManager.deleteCategory(categoryToDelete)
                     if !success {
@@ -89,77 +81,33 @@ struct CategoryManagementView: View {
                 }
                 self.categoryToDelete = nil
             }
-            Button("Annulla", role: .cancel) {
+            Button("cancel".localized(), role: .cancel) {
                 self.categoryToDelete = nil
             }
         } message: {
             if let categoryToDelete = categoryToDelete {
                 let appCount = appManager.countForCategory(categoryToDelete)
-                Text("Sei sicuro di voler eliminare la categoria '\(categoryToDelete)'? \(appCount) app verranno spostate in 'Utilità'.")
+                Text(String(format: "delete_category_message".localized(), categoryToDelete, appCount))
             }
         }
     }
     
     @ViewBuilder
-    private func sectionHeader(_ title: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                Spacer()
-            }
-            Text(subtitle)
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
-        .padding(.horizontal)
-        .padding(.top, 20)
-    }
-    
-    @ViewBuilder
-    private func defaultCategoryRow(_ category: String) -> some View {
-        HStack {
-            CategoryIconView(category: category, size: 24, appManager: appManager)
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(category)
-                    .font(.body)
-                    .fontWeight(.medium)
-                Text("Categoria predefinita")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-            
-            Text("\(appManager.countForCategory(category))")
-                .font(.caption)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.gray.opacity(0.2))
-                .cornerRadius(8)
-                .foregroundColor(.secondary)
-        }
-        .padding()
-        .background(Color.gray.opacity(0.05))
-        .cornerRadius(12)
-    }
-    
-    @ViewBuilder
-    private func customCategoryRow(_ category: String) -> some View {
+    private func categoryRow(_ category: String) -> some View {
+        let isCustom = appManager.isCustomCategory(category)
+        
         HStack {
             CategoryIconView(category: category, size: 24, appManager: appManager)
             
             if editingCategory == category {
                 // Modalità editing
                 VStack(alignment: .leading, spacing: 2) {
-                    TextField("Nome categoria", text: $newName)
+                    TextField("category_name".localized(), text: $newName)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .onSubmit {
                             saveEdit()
                         }
-                    Text("Categoria personalizzata")
+                    Text(isCustom ? "custom_category".localized() : "default_category".localized())
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -169,7 +117,7 @@ struct CategoryManagementView: View {
                     Text(category)
                         .font(.body)
                         .fontWeight(.medium)
-                    Text("Categoria personalizzata")
+                    Text(isCustom ? "custom_category".localized() : "default_category".localized())
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -182,29 +130,29 @@ struct CategoryManagementView: View {
                 .font(.caption)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.blue.opacity(0.2))
+                .background(isCustom ? Color.blue.opacity(0.2) : Color.gray.opacity(0.2))
                 .cornerRadius(8)
-                .foregroundColor(.blue)
+                .foregroundColor(isCustom ? .blue : .secondary)
             
             // Pulsanti azione
             if editingCategory == category {
                 // Pulsanti salva/annulla
                 HStack(spacing: 8) {
-                    Button("Salva") {
+                    Button("save".localized()) {
                         saveEdit()
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
                     .disabled(newName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     
-                    Button("Annulla") {
+                    Button("cancel".localized()) {
                         cancelEdit()
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                 }
             } else {
-                // Pulsanti modifica/elimina
+                // Pulsanti modifica/elimina (per tutte le categorie)
                 HStack(spacing: 8) {
                     Button(action: {
                         startEdit(category)
@@ -227,11 +175,11 @@ struct CategoryManagementView: View {
             }
         }
         .padding()
-        .background(Color.blue.opacity(0.05))
+        .background(isCustom ? Color.blue.opacity(0.05) : Color.gray.opacity(0.05))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.blue.opacity(0.2), lineWidth: 1)
+                .stroke(isCustom ? Color.blue.opacity(0.2) : Color.gray.opacity(0.2), lineWidth: 1)
         )
     }
     

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CategoryCreationView: View {
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var categoryName: String = ""
     @State private var selectedIcon: String = "📁"
     
@@ -12,23 +13,23 @@ struct CategoryCreationView: View {
         VStack(alignment: .leading, spacing: 20) {
             // Header
             HStack {
-                Text("Nuova Categoria")
+                Text("new_category".localized())
                     .font(.title2)
                     .fontWeight(.semibold)
                 
                 Spacer()
                 
-                Button("Annulla") {
+                Button("cancel".localized()) {
                     dismiss()
                 }
             }
             
             // Nome categoria
             VStack(alignment: .leading, spacing: 8) {
-                Text("Nome Categoria")
+                Text("category_name".localized())
                     .font(.headline)
                 
-                TextField("Inserisci il nome della categoria", text: $categoryName)
+                TextField("enter_category_name".localized(), text: $categoryName)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .onSubmit {
                         if !categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -39,7 +40,7 @@ struct CategoryCreationView: View {
             
             // Selezione icona
             VStack(alignment: .leading, spacing: 8) {
-                Text("Icona")
+                Text("icon".localized())
                     .font(.headline)
                 
                 CategoryIconPicker(selectedIcon: $selectedIcon)
@@ -48,17 +49,17 @@ struct CategoryCreationView: View {
             
             // Anteprima
             VStack(alignment: .leading, spacing: 8) {
-                Text("Anteprima")
+                Text("preview".localized())
                     .font(.headline)
                 
                 HStack {
                     if selectedIcon.isEmpty {
-                        CategoryIconView(category: categoryName.isEmpty ? "Nome Categoria" : categoryName, size: 18, appManager: appManager)
+                        CategoryIconView(category: categoryName.isEmpty ? "category_name".localized() : categoryName, size: 18, appManager: appManager)
                     } else {
                         Text(selectedIcon)
                             .font(.system(size: 18))
                     }
-                    Text(categoryName.isEmpty ? "Nome Categoria" : categoryName)
+                    Text(categoryName.isEmpty ? "category_name".localized() : categoryName)
                         .foregroundColor(categoryName.isEmpty ? .secondary : .primary)
                     Spacer()
                 }
@@ -73,12 +74,12 @@ struct CategoryCreationView: View {
             HStack {
                 Spacer()
                 
-                Button("Annulla") {
+                Button("cancel".localized()) {
                     dismiss()
                 }
                 .keyboardShortcut(.cancelAction)
                 
-                Button("Crea Categoria") {
+                Button("create_new_category".localized()) {
                     saveCategory()
                 }
                 .buttonStyle(.borderedProminent)

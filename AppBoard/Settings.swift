@@ -6,6 +6,7 @@ struct SettingsView: View {
     let iconSizeLabels: [CGFloat: String]
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appManager: AppManager
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var showResetAlert = false
     @State private var showToast = false
     @State private var toastMessage: String = ""
@@ -15,20 +16,61 @@ struct SettingsView: View {
     @State private var isTesting: Bool = false
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text("Impostazioni")
-                .font(.title)
-                .padding(.top)
+        VStack(spacing: 0) {
+            // Header with title and close button
+            HStack {
+                Text("settings".localized())
+                    .font(.title)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                Button("close".localized()) {
+                    dismiss()
+                }
+                .keyboardShortcut(.escape)
+            }
+            .padding()
+            
+            Divider()
+            
+            // Scrollable content
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Language Settings
+                    VStack(alignment: .leading, spacing: 12) {
+                Text("language".localized())
+                    .font(.headline)
+                
+                HStack {
+                    Text("language".localized() + ":")
+                    Spacer()
+                    Picker(selection: $localizationManager.currentLanguage) {
+                        Text("language_english".localized()).tag("en")
+                        Text("language_italian".localized()).tag("it")
+                    } label: {
+                        EmptyView()
+                    }
+                    .labelsHidden()
+                    .pickerStyle(MenuPickerStyle())
+                    .frame(minWidth: 150, alignment: .leading)
+                }
+                
+                Text("language_change_note".localized())
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal)
             
             Divider()
             
             // UI Settings
             VStack(alignment: .leading, spacing: 12) {
-                Text("Interfaccia")
+                Text("interface".localized())
                     .font(.headline)
                 
                 HStack {
-                    Text("Dimensione icone:")
+                    Text("icon_size".localized())
                     Spacer()
                     Picker(selection: $iconSize) {
                         ForEach(iconSizes, id: \.self) { size in
@@ -49,10 +91,10 @@ struct SettingsView: View {
             
             // AI Settings
             VStack(alignment: .leading, spacing: 12) {
-                Text("Intelligenza Artificiale")
+                Text("artificial_intelligence".localized())
                     .font(.headline)
                 
-                Text("Configura la chiave API di OpenAI per generare automaticamente descrizioni dei siti web.")
+                Text("ai_description".localized())
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
@@ -71,11 +113,11 @@ struct SettingsView: View {
                         Image(systemName: isKeyVisible ? "eye.slash" : "eye")
                     }
                     .buttonStyle(.plain)
-                    .help(isKeyVisible ? "Nascondi chiave" : "Mostra chiave")
+                    .help(isKeyVisible ? "hide_key".localized() : "show_key".localized())
                     
-                    Button("Salva") {
+                    Button("save".localized()) {
                         UserDefaults.standard.set(openAIKey, forKey: "openai_api_key")
-                        toastMessage = "Chiave API salvata"
+                        toastMessage = "api_key_saved".localized()
                         toastStyle = .success
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
                             showToast = true
@@ -99,7 +141,7 @@ struct SettingsView: View {
                             } else {
                                 Image(systemName: "network")
                             }
-                            Text("Test")
+                            Text("test".localized())
                         }
                     }
                     .buttonStyle(.bordered)
@@ -109,7 +151,7 @@ struct SettingsView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "info.circle")
                         .font(.caption)
-                    Text("Ottieni una chiave API da")
+                    Text("get_api_key_from".localized())
                         .font(.caption)
                     Link("platform.openai.com", destination: URL(string: "https://platform.openai.com/api-keys")!)
                         .font(.caption)
@@ -120,7 +162,7 @@ struct SettingsView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle")
                             .foregroundColor(.orange)
-                        Text("Senza chiave API, verranno generate descrizioni di fallback basate sull'URL.")
+                        Text("no_api_key_warning".localized())
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -133,10 +175,10 @@ struct SettingsView: View {
             
             // Tutorial Avvio Automatico
             VStack(alignment: .leading, spacing: 12) {
-                Text("Avvio Automatico")
+                Text("auto_start".localized())
                     .font(.headline)
                 
-                Text("Per far avviare AppBoard automaticamente al login:")
+                Text("auto_start_description".localized())
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
@@ -146,9 +188,9 @@ struct SettingsView: View {
                             .foregroundColor(.accentColor)
                             .fontWeight(.semibold)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Apri Impostazioni di Sistema")
+                            Text("auto_start_step1".localized())
                                 .fontWeight(.medium)
-                            Text("Menu Apple () > Impostazioni di Sistema")
+                            Text("auto_start_step1_detail".localized())
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -159,9 +201,9 @@ struct SettingsView: View {
                             .foregroundColor(.accentColor)
                             .fontWeight(.semibold)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Vai in Generali > Elementi login")
+                            Text("auto_start_step2".localized())
                                 .fontWeight(.medium)
-                            Text("Oppure cerca \"Elementi login\" nella barra di ricerca")
+                            Text("auto_start_step2_detail".localized())
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -172,7 +214,7 @@ struct SettingsView: View {
                             .foregroundColor(.accentColor)
                             .fontWeight(.semibold)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Clicca il pulsante \"+\" sotto \"Apri al login\"")
+                            Text("auto_start_step3".localized())
                                 .fontWeight(.medium)
                         }
                     }
@@ -182,9 +224,9 @@ struct SettingsView: View {
                             .foregroundColor(.accentColor)
                             .fontWeight(.semibold)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Seleziona AppBoard dalla lista")
+                            Text("auto_start_step4".localized())
                                 .fontWeight(.medium)
-                            Text("Di solito si trova in Applicazioni")
+                            Text("auto_start_step4_detail".localized())
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -200,7 +242,7 @@ struct SettingsView: View {
                 }) {
                     HStack {
                         Image(systemName: "gear")
-                        Text("Apri Impostazioni di Sistema")
+                        Text("open_system_settings".localized())
                     }
                 }
                 .buttonStyle(.borderedProminent)
@@ -211,9 +253,9 @@ struct SettingsView: View {
             
             // Gestione Categorie
             VStack(alignment: .leading, spacing: 12) {
-                Text("Categorie")
+                Text("categories".localized())
                     .font(.headline)
-                Text("Reimposta l'elenco delle categorie rimuovendo quelle aggiunte e riassegnando le app alle categorie iniziali.")
+                Text("reset_categories_description".localized())
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Button(role: .destructive) {
@@ -221,17 +263,36 @@ struct SettingsView: View {
                 } label: {
                     HStack {
                         Image(systemName: "arrow.counterclockwise.circle")
-                        Text("Reset Categorie")
+                        Text("reset_categories".localized())
                     }
                 }
-                .help("Rimuove le categorie personalizzate e riassegna le app alle categorie iniziali")
+                .help("reset_categories_help".localized())
             }
             .padding(.horizontal)
-            .alert("Reset Categorie", isPresented: $showResetAlert) {
-                Button("Annulla", role: .cancel) {}
-                Button("Conferma", role: .destructive) {
+            
+            // Version info at bottom of scroll
+            VStack(spacing: 4) {
+                if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+                   let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
+                    Text(String(format: "app_version".localized(), version, build))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("app_version_default".localized())
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(.vertical)
+                }
+                .padding(.vertical)
+            }
+            
+            .alert("reset_categories_alert_title".localized(), isPresented: $showResetAlert) {
+                Button("cancel".localized(), role: .cancel) {}
+                Button("confirm".localized(), role: .destructive) {
                     let count = appManager.resetCategoriesToDefaults()
-                    toastMessage = "Reset completato: \(count) app riassegnate"
+                    toastMessage = String(format: "reset_completed".localized(), count)
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
                         showToast = true
                     }
@@ -242,33 +303,10 @@ struct SettingsView: View {
                     }
                 }
             } message: {
-                Text("Questa azione rimuoverà tutte le categorie aggiunte e riassegnare le relative app alle categorie iniziali. L'operazione non può essere annullata.")
+                Text("reset_categories_alert_message".localized())
             }
-            
-            Spacer()
-            
-            // Version info
-            VStack(spacing: 4) {
-                if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-                   let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
-                    Text("AppBoard versione \(version) (\(build))")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                } else {
-                    Text("AppBoard versione 1.0")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .padding(.bottom, 8)
-            
-            Button("Chiudi") {
-                dismiss()
-            }
-            .padding(.bottom)
         }
         .frame(width: 550, height: 780)
-        .padding()
         .overlay(alignment: .bottom) {
             if showToast {
                 ToastView(message: toastMessage, style: toastStyle)
@@ -301,10 +339,10 @@ struct SettingsView: View {
                 isTesting = false
                 
                 if let description = testDescription, description.contains("GitHub") || description.contains("Repository") {
-                    toastMessage = "✅ Connessione riuscita! API funzionante"
+                    toastMessage = "connection_successful".localized()
                     toastStyle = .success
                 } else {
-                    toastMessage = "⚠️ Connessione funziona ma risposta inattesa"
+                    toastMessage = "connection_unexpected".localized()
                     toastStyle = .info
                 }
                 

@@ -7,18 +7,18 @@ struct FooterView: View {
     var body: some View {
         HStack {
             if filteredCount < totalApps {
-                Text("\(filteredCount) di \(totalApps) app")
+                Text(String(format: "filtered_apps".localized(), filteredCount, totalApps))
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {
-                Text("\(totalApps) app totali")
+                Text(String(format: "total_apps".localized(), totalApps))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             
             Spacer()
             
-            Text("Trascina le app nelle categorie a sinistra per assegnarle")
+            Text("drag_to_categories".localized())
                 .font(.caption2)
                 .foregroundColor(.secondary)
                 .italic()
