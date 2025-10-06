@@ -467,9 +467,9 @@ class AppManager: ObservableObject {
     }
     
     func renameCategory(from oldName: String, to newName: String) -> Bool {
-        // Non permettere di rinominare categorie predefinite
-        guard isCustomCategory(oldName) else {
-            print("Impossibile rinominare categoria predefinita: \(oldName)")
+        // Non permettere di rinominare la categoria "Tutte"
+        guard oldName != "Tutte" else {
+            print("Impossibile rinominare la categoria speciale: Tutte")
             return false
         }
         
@@ -573,9 +573,9 @@ class AppManager: ObservableObject {
     }
 
     func deleteCategory(_ categoryName: String) -> Bool {
-        // Non permettere di eliminare categorie predefinite
-        guard isCustomCategory(categoryName) else {
-            print("Impossibile eliminare categoria predefinita: \(categoryName)")
+        // Non permettere di eliminare la categoria "Tutte"
+        guard categoryName != "Tutte" else {
+            print("Impossibile eliminare la categoria speciale: Tutte")
             return false
         }
         

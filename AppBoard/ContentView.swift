@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var showSettings = false
     @State private var showCategoryManagement = false
     @State private var showAddWebLink = false
+    @State private var showAddCategory = false
     @State private var isGridSelectionMode = false
     private var notificationCenter = NotificationCenter.default
     @State private var cancellable: AnyCancellable?
@@ -85,9 +86,25 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Categorie")
-                    .font(.headline)
-                    .padding()
+                HStack {
+                    Text("Categorie")
+                        .font(.headline)
+                    
+                    Spacer()
+                    
+                    // Pulsante rapido per aggiungere categoria
+                    Button {
+                        showAddCategory = true
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(.blue)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Aggiungi nuova categoria")
+                }
+                .padding(.horizontal)
+                .padding(.top)
+                .padding(.bottom, 8)
 
                 List(appManager.categories, id: \.self) { category in
                     CategoryDropRow(
@@ -357,6 +374,13 @@ struct ContentView: View {
             WebLinkDetailView(webLink: webLink)
                 .environmentObject(appManager)
         }
+        .sheet(isPresented: $showAddCategory) {
+            CategoryCreationView(appManager: appManager) { newCategoryName in
+                appManager.addCustomCategory(newCategoryName)
+                showAddCategory = false
+                selectedCategory = newCategoryName // Seleziona automaticamente la nuova categoria
+            }
+        }
         .onAppear {
             // Carica app (la dimensione icone è persistita via @AppStorage)
             appManager.loadInstalledApps()
@@ -394,6 +418,9 @@ struct CategoryDropRow: View {
     @ObservedObject var appManager: AppManager
     let isSelected: Bool
     @State private var isDropTargeted = false
+    @State private var showEditDialog = false
+    @State private var showDeleteAlert = false
+    @State private var editedName = ""
     var onSelect: (() -> Void)? = nil
     
     var body: some View {
@@ -401,7 +428,16 @@ struct CategoryDropRow: View {
             CategoryIconView(category: category, size: 18, appManager: appManager)
             Text(category)
                 .fontWeight(isSelected ? .semibold : .regular)
-            Spacer()
+            
+            // Badge per categorie personalizzate
+//            if appManager.isCustomCategory(category) {
+//                Image(systemName: "person.crop.circle.badge.checkmark")
+//                    .font(.caption2)
+//                    .foregroundColor(.blue)
+//                    .help("Categoria personalizzata (modifica con click destro)")
+//            }
+//            Spacer()
+            
             Text("\(appManager.countForCategory(category))")
                 .foregroundColor(.secondary)
         }
@@ -421,6 +457,52 @@ struct CategoryDropRow: View {
         }
         .onDrop(of: ["com.appboard.app-info", "com.appboard.app-info-list", "com.appboard.weblink", UTType.json.identifier], isTargeted: $isDropTargeted) { providers in
             handleDrop(providers: providers)
+        }
+        .contextMenu {
+            if category != "Tutte" {
+                // Tutte le categorie (predefinite e personalizzate) possono essere modificate
+                Button {
+                    editedName = category
+                    showEditDialog = true
+                } label: {
+                    Label("Rinomina", systemImage: "pencil")
+                }
+                
+                Divider()
+                
+                Button(role: .destructive) {
+                    showDeleteAlert = true
+                } label: {
+                    Label("Elimina", systemImage: "trash")
+                }
+                
+                if !appManager.isCustomCategory(category) {
+                    Divider()
+                    Text("Categoria Predefinita")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .alert("Rinomina Categoria", isPresented: $showEditDialog) {
+            TextField("Nuovo nome", text: $editedName)
+            Button("Annulla", role: .cancel) { }
+            Button("Rinomina") {
+                if !editedName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    _ = appManager.renameCategory(from: category, to: editedName)
+                }
+            }
+        } message: {
+            Text("Inserisci il nuovo nome per la categoria '\(category)'")
+        }
+        .alert("Elimina Categoria", isPresented: $showDeleteAlert) {
+            Button("Annulla", role: .cancel) { }
+            Button("Elimina", role: .destructive) {
+                _ = appManager.deleteCategory(category)
+            }
+        } message: {
+            let itemCount = appManager.countForCategory(category)
+            Text("Sei sicuro di voler eliminare '\(category)'? \(itemCount) elementi verranno spostati in 'Utilità'.")
         }
     }
     
