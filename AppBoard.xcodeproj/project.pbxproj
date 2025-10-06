@@ -29,11 +29,6 @@
 			path = AppBoard;
 			sourceTree = "<group>";
 		};
-		D284650B2E91590000A221F6 /* LoginItemHelper */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = LoginItemHelper;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,7 +46,6 @@
 			isa = PBXGroup;
 			children = (
 				D28463FB2E9158E400A221F6 /* AppBoard */,
-				D284650B2E91590000A221F6 /* LoginItemHelper */,
 				D28463FA2E9158E400A221F6 /* Products */,
 			);
 			sourceTree = "<group>";
