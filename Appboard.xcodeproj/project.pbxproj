@@ -20,13 +20,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D28463F92E9158E400A221F6 /* AppBoard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AppBoard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D28463F92E9158E400A221F6 /* Appboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Appboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		D28463FB2E9158E400A221F6 /* AppBoard */ = {
+		D28463FB2E9158E400A221F6 /* Appboard */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AppBoard;
+			path = Appboard;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		D28463F02E9158E400A221F6 = {
 			isa = PBXGroup;
 			children = (
-				D28463FB2E9158E400A221F6 /* AppBoard */,
+				D28463FB2E9158E400A221F6 /* Appboard */,
 				D28463FA2E9158E400A221F6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,7 +53,7 @@
 		D28463FA2E9158E400A221F6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D28463F92E9158E400A221F6 /* AppBoard.app */,
+				D28463F92E9158E400A221F6 /* Appboard.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D28463F82E9158E400A221F6 /* AppBoard */ = {
+		D28463F82E9158E400A221F6 /* Appboard */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D28464042E9158E500A221F6 /* Build configuration list for PBXNativeTarget "AppBoard" */;
+			buildConfigurationList = D28464042E9158E500A221F6 /* Build configuration list for PBXNativeTarget "Appboard" */;
 			buildPhases = (
 				D28463F52E9158E400A221F6 /* Sources */,
 				D28463F62E9158E400A221F6 /* Frameworks */,
@@ -75,13 +75,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				D28463FB2E9158E400A221F6 /* AppBoard */,
+				D28463FB2E9158E400A221F6 /* Appboard */,
 			);
-			name = AppBoard;
+			name = Appboard;
 			packageProductDependencies = (
 			);
 			productName = AppBoard;
-			productReference = D28463F92E9158E400A221F6 /* AppBoard.app */;
+			productReference = D28463F92E9158E400A221F6 /* Appboard.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -99,7 +99,7 @@
 					};
 				};
 			};
-			buildConfigurationList = D28463F42E9158E400A221F6 /* Build configuration list for PBXProject "AppBoard" */;
+			buildConfigurationList = D28463F42E9158E400A221F6 /* Build configuration list for PBXProject "Appboard" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -114,7 +114,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D28463F82E9158E400A221F6 /* AppBoard */,
+				D28463F82E9158E400A221F6 /* Appboard */,
 			);
 		};
 /* End PBXProject section */
@@ -343,7 +343,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D28463F42E9158E400A221F6 /* Build configuration list for PBXProject "AppBoard" */ = {
+		D28463F42E9158E400A221F6 /* Build configuration list for PBXProject "Appboard" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D28464022E9158E500A221F6 /* Debug */,
@@ -352,7 +352,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D28464042E9158E500A221F6 /* Build configuration list for PBXNativeTarget "AppBoard" */ = {
+		D28464042E9158E500A221F6 /* Build configuration list for PBXNativeTarget "Appboard" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D28464052E9158E500A221F6 /* Debug */,
