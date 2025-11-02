@@ -160,3 +160,23 @@
 "list_version" = "Version";
 "list_size" = "Size";
 "list_last_used" = "Last Used";
+
+/* Backup and Restore */
+"backup_restore" = "Backup and Restore";
+"backup_description" = "Export or import a backup of your apps and web links";
+"export_backup" = "Export Backup";
+"import_backup" = "Import Backup";
+"backup_success" = "Backup exported successfully";
+"restore_success" = "Backup imported successfully";
+"backup_error" = "Error during backup";
+"restore_error" = "Error during restore";
+"invalid_backup" = "Invalid backup file";
+"backup_date" = "Backup date: %@";
+"backup_apps_count" = "Apps: %d";
+"backup_links_count" = "Web links: %d";
+"backup_categories_count" = "Categories: %d";
+"select_backup_file" = "Select backup file";
+"create_backup_file" = "Create backup file";
+"backup_file" = "AppBoard Backup";
+"confirm_restore" = "Confirm Restore";
+"confirm_restore_message" = "Are you sure you want to restore this backup? Current apps and web links will be replaced.";

@@ -160,3 +160,23 @@
 "list_version" = "Versione";
 "list_size" = "Dimensione";
 "list_last_used" = "Ultimo Uso";
+
+/* Backup and Restore */
+"backup_restore" = "Backup e Ripristino";
+"backup_description" = "Esporta o importa un backup delle tue app e link web";
+"export_backup" = "Esporta Backup";
+"import_backup" = "Importa Backup";
+"backup_success" = "Backup esportato con successo";
+"restore_success" = "Backup importato con successo";
+"backup_error" = "Errore durante il backup";
+"restore_error" = "Errore durante il ripristino";
+"invalid_backup" = "File di backup non valido";
+"backup_date" = "Data backup: %@";
+"backup_apps_count" = "App: %d";
+"backup_links_count" = "Link web: %d";
+"backup_categories_count" = "Categorie: %d";
+"select_backup_file" = "Seleziona file di backup";
+"create_backup_file" = "Crea file di backup";
+"backup_file" = "Backup AppBoard";
+"confirm_restore" = "Conferma Ripristino";
+"confirm_restore_message" = "Sei sicuro di voler ripristinare questo backup? Le app e i link web attuali verranno sostituiti.";

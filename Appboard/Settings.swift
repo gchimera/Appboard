@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var openAIKey: String = UserDefaults.standard.string(forKey: "openai_api_key") ?? ""
     @State private var isKeyVisible: Bool = false
     @State private var isTesting: Bool = false
+    @State private var showBackupView = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -270,6 +271,29 @@ struct SettingsView: View {
             }
             .padding(.horizontal)
             
+            Divider()
+            
+            // Backup & Restore Section
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Backup e Ripristino")  // Dovrebbe essere "backup_restore".localized()
+                    .font(.headline)
+                Text("Esporta o importa le tue app, link e categorie")  // Dovrebbe essere "backup_description".localized()
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Button {
+                    showBackupView = true
+                } label: {
+                    HStack {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text("Gestisci Backup")  // Non ha una chiave di localizzazione
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .padding(.horizontal)
+
+            Divider()
+            
             // Version info at bottom of scroll
             VStack(spacing: 4) {
                 if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
@@ -307,6 +331,26 @@ struct SettingsView: View {
             }
         }
         .frame(width: 550, height: 780)
+        .sheet(isPresented: $showBackupView) {
+            BackupView()
+        }
+        .alert("reset_categories_alert_title".localized(), isPresented: $showResetAlert) {
+            Button("cancel".localized(), role: .cancel) {}
+            Button("confirm".localized(), role: .destructive) {
+                let count = appManager.resetCategoriesToDefaults()
+                toastMessage = String(format: "reset_completed".localized(), count)
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) {
+                    showToast = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        showToast = false
+                    }
+                }
+            }
+        } message: {
+            Text("reset_categories_alert_message".localized())
+        }
         .overlay(alignment: .bottom) {
             if showToast {
                 ToastView(message: toastMessage, style: toastStyle)
