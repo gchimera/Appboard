@@ -336,7 +336,13 @@ class AppManager: ObservableObject {
             addCustomCategory(categoryName)
         }
         
-        // TODO: Add CloudKit sync for weblinks when ready
+        // Sync WebLink with CloudKit
+        if cloudKitManager.syncEnabled {
+            Task {
+                await syncWebLinkToCloud(webLink)
+            }
+        }
+        
         print("WebLink aggiunto: \(webLink.name)")
     }
     
@@ -347,12 +353,28 @@ class AppManager: ObservableObject {
         }
         webLinks[index] = webLink
         saveWebLinks()
+        
+        // Sync WebLink with CloudKit
+        if cloudKitManager.syncEnabled {
+            Task {
+                await syncWebLinkToCloud(webLink)
+            }
+        }
+        
         print("WebLink aggiornato: \(webLink.name)")
     }
     
     func deleteWebLink(_ webLink: WebLink) {
         webLinks.removeAll { $0.id == webLink.id }
         saveWebLinks()
+        
+        // Sync deletion with CloudKit
+        if cloudKitManager.syncEnabled {
+            Task {
+                await cloudKitManager.deleteWebLink(webLink.id)
+            }
+        }
+        
         print("WebLink eliminato: \(webLink.name)")
     }
     
@@ -798,6 +820,26 @@ class AppManager: ObservableObject {
                 self?.handleSyncedAppAssignment(assignmentData)
             }
         }
+        
+        NotificationCenter.default.addObserver(
+            forName: .webLinkAddedFromSync,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let webLinkData = notification.object as? SyncableWebLinkData {
+                self?.handleSyncedWebLink(webLinkData)
+            }
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: .webLinkUpdatedFromSync,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let webLinkData = notification.object as? SyncableWebLinkData {
+                self?.handleSyncedWebLink(webLinkData)
+            }
+        }
     }
     
     private func handleSyncedCategory(_ categoryData: SyncableCategoryData) {
@@ -828,6 +870,33 @@ class AppManager: ObservableObject {
             saveAppsCache()
             print("Assegnazione app sincronizzata da iCloud: \(assignmentData.bundleIdentifier) -> \(assignmentData.assignedCategory)")
         }
+    }
+    
+    private func handleSyncedWebLink(_ webLinkData: SyncableWebLinkData) {
+        // Crea un WebLink dal dato sincronizzato
+        let webLink = WebLink(
+            id: UUID(uuidString: webLinkData.id) ?? UUID(),
+            name: webLinkData.name,
+            url: webLinkData.url,
+            categoryName: webLinkData.categoryName // This is now always non-nil
+        )
+        
+        // Verifica se esiste già
+        if let index = webLinks.firstIndex(where: { $0.id == webLink.id }) {
+            // Aggiorna il WebLink esistente
+            webLinks[index] = webLink
+        } else {
+            // Aggiungi nuovo WebLink
+            webLinks.append(webLink)
+        }
+        
+        // Assicurati che la categoria esista
+        if !categories.contains(webLinkData.categoryName) {
+            categories.append(webLinkData.categoryName)
+        }
+        
+        saveWebLinks()
+        print("WebLink sincronizzato da iCloud: \(webLinkData.name)")
     }
     
     // Metodo pubblico per attivare la sincronizzazione manuale
@@ -898,6 +967,20 @@ class AppManager: ObservableObject {
             print("Errore sincronizzazione app assignment: \(error)")
             let operation = CloudKitOperation(type: .saveAppAssignment, appData: assignmentData)
             cloudKitManager.addPendingOperation(operation)
+        }
+    }
+    
+    private func syncWebLinkToCloud(_ webLink: WebLink) async {
+        guard let _ = _cloudKitManager else {
+            // CloudKit non ancora inizializzato, salta la sincronizzazione
+            print("CloudKit non inizializzato, saltando sincronizzazione WebLink")
+            return
+        }
+        
+        do {
+            await cloudKitManager.saveWebLink(webLink)
+        } catch {
+            print("Errore sincronizzazione WebLink: \(error)")
         }
     }
 

@@ -193,6 +193,96 @@ enum SyncStatus: String, CaseIterable {
     }
 }
 
+// MARK: - Syncable WebLink Data
+struct SyncableWebLinkData: CloudKitSyncable, Identifiable, Equatable {
+    var id: String
+    var recordID: CKRecord.ID?
+    var name: String
+    var url: String
+    var categoryName: String
+    var lastModified: Date
+    var deviceName: String // Per identificare da quale dispositivo proviene
+    
+    init(name: String, url: String, categoryName: String, deviceName: String = NSFullUserName()) {
+        self.id = UUID().uuidString // Utilizziamo UUID per ID univoco
+        self.name = name
+        self.url = url
+        self.categoryName = categoryName
+        self.lastModified = Date()
+        self.deviceName = deviceName
+    }
+    
+    init(from webLink: WebLink, deviceName: String = NSFullUserName()) {
+        self.id = webLink.id.uuidString
+        self.name = webLink.name
+        self.url = webLink.url
+        self.categoryName = webLink.categoryName ?? "Tutte" // Default to "Tutte" if no category
+        self.lastModified = Date()
+        self.deviceName = deviceName
+    }
+    
+    func toCKRecord() -> CKRecord {
+        let record = CKRecord(recordType: "WebLink", recordID: recordID ?? CKRecord.ID())
+        record["id"] = id as CKRecordValue
+        record["name"] = name as CKRecordValue
+        record["url"] = url as CKRecordValue
+        record["categoryName"] = categoryName as CKRecordValue
+        record["lastModified"] = lastModified as CKRecordValue
+        record["deviceName"] = deviceName as CKRecordValue
+        return record
+    }
+    
+    static func fromCKRecord(_ record: CKRecord) -> SyncableWebLinkData? {
+        guard let id = record["id"] as? String,
+              let name = record["name"] as? String,
+              let url = record["url"] as? String,
+              let categoryName = record["categoryName"] as? String,
+              let lastModified = record["lastModified"] as? Date,
+              let deviceName = record["deviceName"] as? String else {
+            return nil
+        }
+        
+        var webLinkData = SyncableWebLinkData(name: name, url: url, categoryName: categoryName, deviceName: deviceName)
+        webLinkData.id = id
+        webLinkData.recordID = record.recordID
+        webLinkData.lastModified = lastModified
+        return webLinkData
+    }
+    
+    static func == (lhs: SyncableWebLinkData, rhs: SyncableWebLinkData) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
+// MARK: - SyncableWebLinkData Codable Implementation
+extension SyncableWebLinkData: Codable {
+    enum CodingKeys: String, CodingKey {
+        case id, name, url, categoryName, lastModified, deviceName
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        url = try container.decode(String.self, forKey: .url)
+        categoryName = try container.decode(String.self, forKey: .categoryName)
+        lastModified = try container.decode(Date.self, forKey: .lastModified)
+        deviceName = try container.decode(String.self, forKey: .deviceName)
+        recordID = nil // Non decodifichiamo recordID perché non è Codable
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(url, forKey: .url)
+        try container.encode(categoryName, forKey: .categoryName)
+        try container.encode(lastModified, forKey: .lastModified)
+        try container.encode(deviceName, forKey: .deviceName)
+        // Non encodiamo recordID perché non è Codable
+    }
+}
+
 // MARK: - Sync Configuration
 struct SyncConfiguration {
     static let shared = SyncConfiguration()
@@ -201,6 +291,7 @@ struct SyncConfiguration {
     let containerIdentifier = "iCloud.com.appboard.mac" // Info: usando CKContainer.default()
     let appAssignmentRecordType = "AppAssignment"
     let customCategoryRecordType = "CustomCategory"
+    let webLinkRecordType = "WebLink"
     
     // Intervallo di sincronizzazione automatica (in secondi)
     let autoSyncInterval: TimeInterval = 300 // 5 minuti

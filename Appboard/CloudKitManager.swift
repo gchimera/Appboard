@@ -137,6 +137,7 @@ class CloudKitManager: ObservableObject {
             // Sincronizza le categorie personalizzate prima delle assegnazioni
             try await syncCustomCategories()
             try await syncAppAssignments()
+            try await syncWebLinks()
             
             syncStatus = .success
             lastSyncDate = Date()
@@ -148,9 +149,9 @@ class CloudKitManager: ObservableObject {
             print("Errore durante la sincronizzazione: \(errorMessage)")
             
             // Se è un errore di configurazione CloudKit, disabilita la sincronizzazione
-            if errorMessage.contains("entitlement") || 
-               errorMessage.contains("CloudKit") || 
-               errorMessage.contains("container configuration") || 
+            if errorMessage.contains("entitlement") ||
+               errorMessage.contains("CloudKit") ||
+               errorMessage.contains("container configuration") ||
                errorMessage.contains("server") {
                 print("Errore di configurazione CloudKit rilevato. Disabilitazione sincronizzazione.")
                 syncEnabled = false
@@ -175,6 +176,14 @@ class CloudKitManager: ObservableObject {
         try await downloadRemoteAppAssignments()
     }
     
+    func syncWebLinks() async throws {
+        // Upload WebLink locali
+        try await uploadLocalWebLinks()
+        
+        // Download WebLink remoti
+        try await downloadRemoteWebLinks()
+    }
+    
     // MARK: - Upload Operations
     
     private func uploadLocalCategories() async throws {
@@ -191,6 +200,15 @@ class CloudKitManager: ObservableObject {
         
         for assignmentData in localAssignments {
             let record = assignmentData.toCKRecord()
+            try await saveRecord(record)
+        }
+    }
+    
+    private func uploadLocalWebLinks() async throws {
+        let localWebLinks = await getLocalWebLinks()
+        
+        for webLinkData in localWebLinks {
+            let record = webLinkData.toCKRecord()
             try await saveRecord(record)
         }
     }
@@ -215,6 +233,17 @@ class CloudKitManager: ObservableObject {
         for record in records {
             if let assignmentData = SyncableAppData.fromCKRecord(record) {
                 await mergeRemoteAppAssignment(assignmentData)
+            }
+        }
+    }
+    
+    private func downloadRemoteWebLinks() async throws {
+        let query = CKQuery(recordType: config.webLinkRecordType, predicate: NSPredicate(value: true))
+        let records = try await performQuery(query)
+        
+        for record in records {
+            if let webLinkData = SyncableWebLinkData.fromCKRecord(record) {
+                await mergeRemoteWebLink(webLinkData)
             }
         }
     }
@@ -277,6 +306,21 @@ class CloudKitManager: ObservableObject {
         }
     }
     
+    private func mergeRemoteWebLink(_ remoteWebLink: SyncableWebLinkData) async {
+        // Verifica se abbiamo già questo WebLink localmente
+        let localWebLinks = await getLocalWebLinks()
+        
+        if let localWebLink = localWebLinks.first(where: { $0.id == remoteWebLink.id }) {
+            // Risoluzione conflitti: usa la versione più recente
+            if remoteWebLink.lastModified > localWebLink.lastModified {
+                await updateLocalWebLink(remoteWebLink)
+            }
+        } else {
+            // Nuovo WebLink da aggiungere
+            await addLocalWebLink(remoteWebLink)
+        }
+    }
+    
     // MARK: - Local Data Integration
     
     private func getLocalCustomCategories() async -> [SyncableCategoryData] {
@@ -303,6 +347,14 @@ class CloudKitManager: ObservableObject {
                 )
             }
             return nil
+        }
+    }
+    
+    private func getLocalWebLinks() async -> [SyncableWebLinkData] {
+        // Ottieni tutti i WebLink dal AppManager
+        let appManager = AppManager()
+        return appManager.webLinks.map { webLink in
+            SyncableWebLinkData(from: webLink)
         }
     }
     
@@ -335,6 +387,22 @@ class CloudKitManager: ObservableObject {
         NotificationCenter.default.post(
             name: .appAssignmentAddedFromSync,
             object: assignmentData
+        )
+    }
+    
+    private func updateLocalWebLink(_ webLinkData: SyncableWebLinkData) async {
+        // Invia notifica per aggiornare il WebLink
+        NotificationCenter.default.post(
+            name: .webLinkUpdatedFromSync,
+            object: webLinkData
+        )
+    }
+    
+    private func addLocalWebLink(_ webLinkData: SyncableWebLinkData) async {
+        // Invia notifica per aggiungere il WebLink
+        NotificationCenter.default.post(
+            name: .webLinkAddedFromSync,
+            object: webLinkData
         )
     }
     
@@ -381,6 +449,11 @@ class CloudKitManager: ObservableObject {
                         let record = assignmentData.toCKRecord()
                         try await saveRecord(record)
                     }
+                case .saveWebLink:
+                    if let webLinkData = operation.webLinkData {
+                        let record = webLinkData.toCKRecord()
+                        try await saveRecord(record)
+                    }
                 }
             } catch {
                 print("Errore nell'elaborazione operazione pendente: \(error)")
@@ -419,6 +492,48 @@ class CloudKitManager: ObservableObject {
             syncStatus = .idle
         }
     }
+    
+    // MARK: - WebLink Sync Methods
+    
+    func forceSyncWebLinks() async {
+        guard syncEnabled && isOnline else { return }
+        
+        do {
+            try await syncWebLinks()
+            syncStatus = .success
+            lastSyncDate = Date()
+        } catch {
+            syncStatus = .error
+            print("Errore durante la sincronizzazione WebLink: \(error)")
+        }
+    }
+    
+    func saveWebLink(_ webLink: WebLink) async {
+        guard syncEnabled else { return }
+        
+        let webLinkData = SyncableWebLinkData(from: webLink)
+        
+        if isOnline {
+            do {
+                let record = webLinkData.toCKRecord()
+                try await saveRecord(record)
+            } catch {
+                print("Errore nel salvataggio WebLink: \(error)")
+                // Salva operazione per il retry
+                addPendingOperation(CloudKitOperation(type: .saveWebLink, webLinkData: webLinkData))
+            }
+        } else {
+            // Salva operazione per il retry quando torna online
+            addPendingOperation(CloudKitOperation(type: .saveWebLink, webLinkData: webLinkData))
+        }
+    }
+    
+    func deleteWebLink(_ webLinkID: UUID) async {
+        // Implementa l'eliminazione del WebLink dal CloudKit
+        // Nota: CloudKit non ha eliminazione diretta, quindi dovremmo usare CKModifyRecordsOperation
+        // Per ora, per semplicità, non implementiamo l'eliminazione, ma possiamo aggiungerla in futuro
+        print("Eliminazione WebLink da CloudKit non ancora implementata")
+    }
 }
 
 // MARK: - CloudKit Operation
@@ -426,6 +541,7 @@ struct CloudKitOperation: Codable {
     enum OperationType: String, Codable {
         case saveCategory
         case saveAppAssignment
+        case saveWebLink
     }
     
     let id: UUID
@@ -433,13 +549,15 @@ struct CloudKitOperation: Codable {
     let timestamp: Date
     let categoryData: SyncableCategoryData?
     let appData: SyncableAppData?
+    let webLinkData: SyncableWebLinkData?
     
-    init(type: OperationType, categoryData: SyncableCategoryData? = nil, appData: SyncableAppData? = nil) {
+    init(type: OperationType, categoryData: SyncableCategoryData? = nil, appData: SyncableAppData? = nil, webLinkData: SyncableWebLinkData? = nil) {
         self.id = UUID()
         self.type = type
         self.timestamp = Date()
         self.categoryData = categoryData
         self.appData = appData
+        self.webLinkData = webLinkData
     }
 }
 
@@ -449,4 +567,6 @@ extension Notification.Name {
     static let categoryAddedFromSync = Notification.Name("categoryAddedFromSync")
     static let appAssignmentUpdatedFromSync = Notification.Name("appAssignmentUpdatedFromSync")
     static let appAssignmentAddedFromSync = Notification.Name("appAssignmentAddedFromSync")
+    static let webLinkUpdatedFromSync = Notification.Name("webLinkUpdatedFromSync")
+    static let webLinkAddedFromSync = Notification.Name("webLinkAddedFromSync")
 }
