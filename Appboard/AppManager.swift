@@ -419,7 +419,7 @@ class AppManager: ObservableObject {
         isLoaded = false
     }
     
-    private func saveWebLinks() {
+    func saveWebLinks() {
         do {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
@@ -655,7 +655,7 @@ class AppManager: ObservableObject {
     
     // MARK: Custom Categories Storage
     
-    private func saveCustomCategories() {
+    func saveCustomCategories() {
         let customCats = customCategories
         UserDefaults.standard.set(customCats, forKey: "customCategories")
         print("Categorie personalizzate salvate: \(customCats)")
@@ -754,7 +754,7 @@ class AppManager: ObservableObject {
         print("Ordine categorie aggiornato")
     }
     
-    private func saveCategoryOrder() {
+    func saveCategoryOrder() {
         // Salva l'ordine completo delle categorie
         UserDefaults.standard.set(categories, forKey: "categoryOrder")
         print("Ordine categorie salvato: \(categories)")

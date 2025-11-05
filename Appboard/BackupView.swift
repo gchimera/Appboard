@@ -121,11 +121,19 @@ struct BackupView: View {
                         if backupManager.validateBackup(backup) {
                             // Aggiorna le categorie
                             appManager.categories = backup.categories
-                            
+
+                            // Salva le categorie personalizzate e l'ordine
+                            appManager.saveCustomCategories()
+                            appManager.saveCategoryOrder()
+
                             // Aggiorna le app e i link
                             appManager.apps = backup.apps
                             appManager.webLinks = backup.webLinks
-                            
+
+                            // Salva la cache delle app e dei WebLinks
+                            appManager.saveAppsCache()
+                            appManager.saveWebLinks()
+
                             alertMessage = "restore_success".localized()
                             showSuccessAlert = true
                         } else {
