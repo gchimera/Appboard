@@ -6,7 +6,7 @@
 
 A beautiful and powerful Mac app for organizing your installed applications and web links. AppBoard helps you categorize, manage, and quickly access all your apps and favorite websites in one elegant interface.
 
-![AppBoard](https://via.placeholder.com/800x400/007AFF/FFFFFF?text=AppBoard+Screenshot)
+![AppBoard](Screenshots/Screenshot2025-10-05.png)
 
 ## ✨ Features
 
