@@ -42,7 +42,7 @@ A beautiful and powerful Mac app for organizing your installed applications and 
 ## 🚀 Installation
 
 ### Option 1: Download from GitHub Releases (Recommended)
-- Download the latest `AppBoard.dmg` file [Releases] (https://github.com/gchimera/Appboard/raw/refs/heads/main/Releases/Appboard.dmg)
+- Download the latest `AppBoard.dmg` file [Releases](https://github.com/gchimera/Appboard/raw/refs/heads/main/Releases/Appboard.dmg)
 - Open the DMG and drag AppBoard to your Applications folder
 
 ### Option 2: Build from Source
